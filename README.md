@@ -11,8 +11,8 @@ This is a React project built with TypeScript, Tailwind CSS, and React Router.
 
 1.  Clone the repository:
     ```bash
-    git clone <your-repository-url>
-    cd <your-project-directory>
+    git clone https://github.com/Alejandrocuartas/runify
+    cd runify
     ```
 2.  Install the dependencies:
     ```bash
