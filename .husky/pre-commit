@@ -1,0 +1,14 @@
+echo "Running ESLint check..."
+npm run lint:fix
+
+# Check the exit code of the lint command
+if [ $? -ne 0 ]; then
+  echo "ESLint check failed. Please fix the errors before committing."
+  exit 1 # Exit with a non-zero code to prevent the commit
+fi
+
+echo "ESLint check passed."
+# Add other pre-commit checks here if needed (e.g., tests)
+
+# If all checks pass, exit with 0 to allow the commit
+exit 0

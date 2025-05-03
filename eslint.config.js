@@ -36,6 +36,20 @@ export default tseslint.config( // Use tseslint.config for convenience
             },
         },
     },
+    { // Configuration for CommonJS files (.cjs)
+        files: ['**/*.cjs'],
+        languageOptions: {
+            globals: { // Define Node.js globals for CJS files
+                ...globals.node, // Includes require, module, __dirname, etc.
+            },
+        },
+        rules: {
+            // Disable rules that conflict with CommonJS
+            '@typescript-eslint/no-var-requires': 'off', // Allow require()
+            '@typescript-eslint/no-require-imports': 'off', // Allow require() style imports
+            'no-undef': 'off', // Allow Node.js globals like require, module, __dirname
+        },
+    },
     { // Global rules (like indentation)
         rules: {
             indent: ['error', 4],
