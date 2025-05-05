@@ -1,5 +1,5 @@
 import React, { useState, FC } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { SignUp } from '../utils/http';
 import { runnifyTokenName } from '../utils/constants';
 
@@ -12,7 +12,6 @@ interface FormData {
 }
 
 const Register: FC = () => {
-    const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState<FormData>({
         firstName: '',
@@ -45,8 +44,7 @@ const Register: FC = () => {
 
             const { token } = response;
             localStorage.setItem(runnifyTokenName, token);
-            alert("Registro exitoso");
-            navigate("/");
+            window.location.href = "/runner-dashboard";
 
         } catch (error: unknown) {
             setLoading(false);

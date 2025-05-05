@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { runnifyTokenName } from '../utils/constants';
 
 const ProfileMenu: React.FC = () => {
+    const navigate = useNavigate()
     const [isOpen, setIsOpen] = useState(false);
-    const isLoggedIn = false;
+    const isLoggedIn = localStorage.getItem(runnifyTokenName) !==null;
 
     return (
         <div className="relative">
@@ -30,9 +32,9 @@ const ProfileMenu: React.FC = () => {
                             aria-expanded={isOpen}
                         >
                             <img
-                                src="/default-avatar.png"
+                                src="https://images.icon-icons.com/3446/PNG/512/account_profile_user_avatar_icon_219236.png"
                                 alt={'Perfil de usuario'}
-                                className="w-8 h-8 rounded-full"
+                                className="w-8 h-8 rounded-full" 
                             />
                         </button>
 
@@ -71,6 +73,8 @@ const ProfileMenu: React.FC = () => {
                                 <button
                                     onClick={() => {
                                         setIsOpen(false);
+                                        localStorage.removeItem(runnifyTokenName)
+                                        navigate("/")
                                     }}
                                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                     role="menuitem"

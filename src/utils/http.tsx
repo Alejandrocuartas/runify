@@ -9,7 +9,7 @@ const SignUp = async (data: any = {}): Promise<any> => {
         "Content-Type": "application/json",
     };
 
-    const response = await fetch(servicesUrl + "/a/api/v1/auth/signup", {
+    const response = await fetch(servicesUrl + "/api/v1/auth/signup", {
         method: "POST",
         body: JSON.stringify(data),
         headers,
@@ -28,7 +28,7 @@ const SignIn = async (data: any = {}): Promise<any> => {
         "Content-Type": "application/json",
     };
 
-    const response = await fetch(servicesUrl + "/a/api/v1/auth/login", {
+    const response = await fetch(servicesUrl + "/api/v1/auth/login", {
         method: "POST",
         body: JSON.stringify(data),
         headers,

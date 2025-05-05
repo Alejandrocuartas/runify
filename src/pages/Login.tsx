@@ -1,5 +1,5 @@
 import React, { useState, FC } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { SignIn } from "../utils/http";
 import { runnifyTokenName } from '../utils/constants';
 
@@ -9,7 +9,6 @@ interface FormData {
 }
 
 const Login: FC = () => {
-    const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState<FormData>({
         email: '',
@@ -32,9 +31,8 @@ const Login: FC = () => {
             }
 
             localStorage.setItem(runnifyTokenName, response.token);
-            alert("Inicio de sesión exitoso");
 
-            navigate("/dashboard");
+            window.location.href = "/runner-dashboard";
 
         } catch (error: any) {
             setLoading(false);
