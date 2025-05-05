@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { runnifyTokenName } from '../utils/constants';
+import { useGlobalState } from '../context';
 
 const ProfileMenu: React.FC = () => {
     const navigate = useNavigate()
     const [isOpen, setIsOpen] = useState(false);
-    const isLoggedIn = localStorage.getItem(runnifyTokenName) !==null;
+    const { logged, setLogged } = useGlobalState()
 
     return (
         <div className="relative">
@@ -23,7 +24,7 @@ const ProfileMenu: React.FC = () => {
           Runner
                 </Link>
 
-                {isLoggedIn ? (
+                {logged ? (
                     <>
                         <button
                             onClick={() => setIsOpen(!isOpen)}
@@ -45,34 +46,27 @@ const ProfileMenu: React.FC = () => {
                                 aria-orientation="vertical"
                                 aria-labelledby="user-menu-button"
                             >
-                                <Link
+                                {/*<Link
                                     to="/profile"
                                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                     role="menuitem"
                                     onClick={() => setIsOpen(false)}
                                 >
-                                    {'Mi Perfil'}
+                                    Mi Perfil
                                 </Link>
-                                <Link
-                                    to="/my-events"
-                                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                    role="menuitem"
-                                    onClick={() => setIsOpen(false)}
-                                >
-                                    {'Mis Eventos'}
-                                </Link>
-                                <Link
+                                 <Link
                                     to="/settings"
                                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                     role="menuitem"
                                     onClick={() => setIsOpen(false)}
                                 >
-                                    {'Configuraciones'}
+                                    Configuración de cuenta
                                 </Link>
-                                <hr className="my-1" />
+                                <hr className="my-1" /> */}
                                 <button
                                     onClick={() => {
                                         setIsOpen(false);
+                                        setLogged(false)
                                         localStorage.removeItem(runnifyTokenName)
                                         navigate("/")
                                     }}

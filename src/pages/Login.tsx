@@ -1,14 +1,16 @@
 import React, { useState, FC } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { SignIn } from "../utils/http";
 import { runnifyTokenName } from '../utils/constants';
-
+import { useGlobalState } from '../context';
 interface FormData {
     email: string;
     password: string;
 }
 
 const Login: FC = () => {
+    const { setLogged } = useGlobalState()
+    const navigate = useNavigate()
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState<FormData>({
         email: '',
@@ -31,8 +33,9 @@ const Login: FC = () => {
             }
 
             localStorage.setItem(runnifyTokenName, response.token);
+            setLogged(true)
 
-            window.location.href = "/runner-dashboard";
+            navigate("/runner-dashboard");
 
         } catch (error: any) {
             setLoading(false);

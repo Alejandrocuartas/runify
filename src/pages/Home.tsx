@@ -1,9 +1,9 @@
-import React, { FC } from 'react';
+import React, { FC, useEffect } from 'react';
 import Card from '../components/Card';
 // Import CardProps from the Card component file is the best practice:
 // import Card, { CardProps } from '../components/Card';
 import { Link } from 'react-router-dom';
-
+import { useGlobalState } from '../context';
 // Define the structure for a running event item
 interface RunningEvent {
   id: number;
@@ -43,6 +43,7 @@ const features: Feature[] = [
 
 // Define the Home component using Arrow Function and FC type
 const Home: FC = () => {
+    const { requestLocation } = useGlobalState()
     const runningEvents: RunningEvent[] = [
         {
             id: 1,
@@ -69,6 +70,10 @@ const Home: FC = () => {
             distance: "10km"
         }
     ];
+
+    useEffect(() => {
+        requestLocation()
+    }, [requestLocation])
 
     return (
         <div className="space-y-16">
