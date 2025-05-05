@@ -29,6 +29,7 @@ export default tseslint.config( // Use tseslint.config for convenience
             'react/react-in-jsx-scope': 'off', // Optional: Off if using React 17+ new JSX transform
             'react/prop-types': 'off', // Optional: Off since we use TypeScript for types
             indent: ['error', 4],
+            '@typescript-eslint/no-explicit-any': 'off',
         },
         settings: { // Add React version setting
             react: {
