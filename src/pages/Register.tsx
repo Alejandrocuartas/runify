@@ -12,7 +12,7 @@ interface FormData {
 }
 
 const Register: FC = () => {
-    const { setLogged } = useGlobalState()
+    const { setLogged, setToken } = useGlobalState()
     const navigate = useNavigate()
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState<FormData>({
@@ -47,6 +47,7 @@ const Register: FC = () => {
             const { token } = response;
             localStorage.setItem(runnifyTokenName, token);
             setLogged(true)
+            setToken(token)
             navigate("/runner-dashboard");
 
         } catch (error: unknown) {

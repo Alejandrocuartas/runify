@@ -16,6 +16,8 @@ interface GlobalContextType {
     location: LocationState | null
     setLocation: React.Dispatch<React.SetStateAction<LocationState | null>>;
     requestLocation: () => void;
+    token: string | null
+    setToken: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 const logContext = createContext<GlobalContextType>({
@@ -25,14 +27,16 @@ const logContext = createContext<GlobalContextType>({
     setLogged: () => {},
     location: null,
     setLocation: () => {},
-    requestLocation: () => {}
+    requestLocation: () => {},
+    token: null,
+    setToken: () => {}
 });
 
 const Context = ({ children }) => {
     const [logged, setLogged] = useState(localStorage.getItem(runnifyTokenName) !== null)
     const [user, setUser] = useState(null)
     const [location, setLocation] = useState<LocationState | null>(null)
-
+    const [token, setToken] = useState<string | null>(localStorage.getItem(runnifyTokenName))
     const requestLocation = useCallback(() => {
         if (location) {
             return;
@@ -72,6 +76,8 @@ const Context = ({ children }) => {
             location,
             setLocation,
             requestLocation,
+            token,
+            setToken
         }}>
             {children}
         </logContext.Provider>
