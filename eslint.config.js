@@ -60,7 +60,8 @@ export default tseslint.config( // Use tseslint.config for convenience
         ignores: [
             'webpack.config.js',
             'dist/', // Example: ignore build output directory
-            'node_modules/' // Standard practice
+            'node_modules/', // Standard practice
+            'tailwind.config.js',
         ],
     }
 ); 

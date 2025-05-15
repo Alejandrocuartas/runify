@@ -2,6 +2,7 @@ import React, { useState, useEffect, FC } from 'react';
 import Card from '../components/Card';
 import FilterBar from '../components/FilterBar';
 import { ResponsiveContainer, ResponsiveGrid } from '../components/Layout';
+import CardSkeleton from '../components/CardSkeleton';
 
 interface Event {
     id: number;
@@ -33,11 +34,12 @@ const Events: FC <EventsProps> = ({ searchQuery = '' }) => {
 
     useEffect(() => {
         const fetchEvents = async () => {
+            setLoading(true);
             try {
                 const response = await fetch('https://jsonplaceholder.typicode.com/posts');
                 const data = await response.json();
 
-                const transformedEvents = data.slice(0, 8).map(post => ({
+                const transformedEvents = data.slice(0, 8).map((post:any) => ({
                     id: post.id,
                     title: post.title,
                     description: post.body,
@@ -51,9 +53,9 @@ const Events: FC <EventsProps> = ({ searchQuery = '' }) => {
                 }));
 
                 setEvents(transformedEvents);
-                setLoading(false);
             } catch (error) {
                 console.error('Error obteniendo eventos:', error);
+            } finally {
                 setLoading(false);
             }
         };
@@ -106,10 +108,6 @@ const Events: FC <EventsProps> = ({ searchQuery = '' }) => {
         return matchesQuery && matchesType && matchesDistance && matchesDate;
     });
 
-    if (loading) {
-        return <div className="text-center py-10">Cargando eventos...</div>;
-    }
-
     return (
         <ResponsiveContainer>
             <FilterBar
@@ -119,8 +117,7 @@ const Events: FC <EventsProps> = ({ searchQuery = '' }) => {
 
             <div className="section">
                 <h1 className="text-4xl font-bold text-gray-900 mt-6 mb-2">Eventos de Running</h1>
-                <p className="text-lg text-gray-600 mb-4">Encuentra las mejores carreras cerca de ti.
-                </p>
+                <p className="text-lg text-gray-600 mb-4">Encuentra las mejores carreras cerca de ti.</p>
 
                 {searchQuery && (
                     <div className="text-gray-600 mb-6 py-2.5 px-3 bg-gray-50 rounded-lg">
@@ -129,7 +126,11 @@ const Events: FC <EventsProps> = ({ searchQuery = '' }) => {
                     </div>
                 )}
 
-                {filteredEvents.length > 0 ? (
+                {loading ? (
+                    <ResponsiveGrid>
+                        {[...Array(6)].map((_, index) => <CardSkeleton key={index} />)}
+                    </ResponsiveGrid>
+                ) : filteredEvents.length > 0 ? (
                     <ResponsiveGrid>
                         {filteredEvents.map(event => (
                             <Card
@@ -141,13 +142,13 @@ const Events: FC <EventsProps> = ({ searchQuery = '' }) => {
                                 date={event.date}
                                 distance={event.distance}
                                 location={event.location}
-                                price={String(event.price)}
+                                price={typeof event.price === 'number' ? event.price.toString() : event.price}
                             />
                         ))}
                     </ResponsiveGrid>
                 ) : (
                     <div className="text-center py-10 text-gray-600 bg-gray-50 rounded-lg">
-                        <p>No se encontraron eventos que coincidan con tu búsqueda.</p>
+                        <p>No se encontraron eventos que coincidan con tu búsqueda o filtros.</p>
                     </div>
                 )}
             </div>

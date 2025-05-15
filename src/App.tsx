@@ -9,6 +9,8 @@ import Register from "./pages/Register";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
 import RunnerDashboard from "./pages/RunnerDashboard";
 import AddRace from "./pages/AddRace";
+import EventDetailPage from "./pages/EventDetailPage";
+import RaceRegistrationPage from "./pages/RaceRegistrationPage";
 
 const App = () => {
     return (
@@ -22,6 +24,8 @@ const App = () => {
                     <Route path="/organizer-dashboard" element={<OrganizerDashboard/>} />
                     <Route path="/runner-dashboard" element={<RunnerDashboard/>} />
                     <Route path="/events" element={<Events/>} />
+                    <Route path="/events/:eventId" element={<EventDetailPage />} />
+                    <Route path="/events/:eventId/register" element={<RaceRegistrationPage />} />
                     <Route path="/add-race" element={<AddRace/>} />
                 </Routes>
             </Layout>
