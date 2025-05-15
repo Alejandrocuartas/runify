@@ -89,7 +89,7 @@ const OrganizerDashboard = () => {
 
             <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
                 <h2 className="text-xl font-semibold mb-4">Resumen de Eventos</h2>
-                <div className="grid md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="p-4 bg-gray-50 rounded-lg">
                         <div className="text-2xl font-bold text-blue-600">{sampleStats.activeEvents}</div>
                         <div className="text-sm text-gray-600">Eventos Activos</div>
@@ -113,7 +113,7 @@ const OrganizerDashboard = () => {
                 <h2 className="text-xl font-semibold mb-4">Eventos Recientes</h2>
                 <div className="divide-y">
                     {recentEvents.map(event => (
-                        <div key={event.id} className="py-4 flex items-center justify-between">
+                        <div key={event.id} className="py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                             <div>
                                 <h3 className="font-medium mb-1">{event.title}</h3>
                                 <p className="text-sm text-gray-600">

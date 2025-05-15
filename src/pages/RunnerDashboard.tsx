@@ -10,7 +10,7 @@ const RunnerDashboard = () => {
                 <p className="text-gray-600">Visión general de tus carreras y estadísticas.</p>
             </div>
 
-            <div className="grid md:grid-cols-4 gap-6 mb-12">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                 <div className="p-6 bg-gray-50 rounded-xl">
                     <div className="text-3xl font-bold text-blue-600 mb-2">0</div>
                     <h3 className="font-semibold">Eventos a los que te has unido</h3>

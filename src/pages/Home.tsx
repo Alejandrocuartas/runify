@@ -78,7 +78,7 @@ const Home: FC = () => {
     return (
         <div className="space-y-16">
             {/* Hero Section */}
-            <div className="relative h-[80vh] flex items-center rounded-[2.5rem] overflow-hidden">
+            <div className="relative h-[60vh] md:h-[75vh] lg:h-[80vh] flex items-center rounded-[2.5rem] overflow-hidden">
                 <div
                     className="absolute inset-0 bg-cover bg-center"
                     style={{ backgroundImage: "url('https://images.unsplash.com/photo-1552674605-db6ffd4facb5?q=80')" }}

@@ -324,7 +324,7 @@ const AddRace = () => {
                 <div className="space-y-4">
                     <h2 className="text-xl font-semibold">Detalles del Evento</h2>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label className="block mb-2">Fecha</label>
                             <input
