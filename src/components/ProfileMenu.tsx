@@ -33,7 +33,7 @@ const ProfileMenu: React.FC = () => {
         <div className="relative">
             <div className="flex items-center gap-4">
                 <Link
-                    to="/organizador-dashboard"
+                    to="/organizer-dashboard"
                     className="text-sm text-gray-600 hover:text-blue-600 hidden md:inline-block"
                 >
           Organizador
