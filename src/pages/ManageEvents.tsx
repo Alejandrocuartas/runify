@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { runnifyTokenName } from '../utils/constants';
 import { useGlobalState } from '../context';
 import TagInput from '../components/TagInput';
 
@@ -33,7 +32,6 @@ interface Organizer {
 const EditEventModal = ({ event, onClose, onSave }: { event: Event; onClose: () => void; onSave: (updatedEvent: Event) => void }) => {
     const [loading, setLoading] = useState(false);
     const [eventData, setEventData] = useState<Event>(event);
-    const { token } = useGlobalState();
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value, type } = e.target;
@@ -63,7 +61,7 @@ const EditEventModal = ({ event, onClose, onSave }: { event: Event; onClose: () 
         const formattedPrice = price.replace(/\D/g, '');
         setEventData(prev => ({
             ...prev,
-            distancePrices: prev.distancePrices.map(dp => 
+            distancePrices: prev.distancePrices.map(dp =>
                 dp.distance === distance ? { ...dp, price: Number(formattedPrice) } : dp
             )
         }));
@@ -285,8 +283,7 @@ const EditEventModal = ({ event, onClose, onSave }: { event: Event; onClose: () 
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className={`px-4 py-2 rounded text-white ${
-                                    loading ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'
+                                className={`px-4 py-2 rounded text-white ${loading ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'
                                 }`}
                             >
                                 {loading ? 'Guardando...' : 'Guardar Cambios'}
@@ -340,10 +337,10 @@ const ManageEvents = () => {
         try {
             // Aquí iría la llamada real a la API
             // Por ejemplo: const response = await api.get(`/events?organizerId=${organizerId}`);
-            
+
             // Simulamos la respuesta de la API
             await new Promise(resolve => setTimeout(resolve, 1000));
-            
+
             const sampleEvents: Event[] = [
                 {
                     id: 1,
@@ -422,7 +419,7 @@ const ManageEvents = () => {
     };
 
     const handleSaveEvent = (updatedEvent: Event) => {
-        setEvents(events.map(event => 
+        setEvents(events.map(event =>
             event.id === updatedEvent.id ? updatedEvent : event
         ));
         setIsEditModalOpen(false);
@@ -441,7 +438,7 @@ const ManageEvents = () => {
             try {
                 // Aquí iría la llamada real a la API para eliminar el evento
                 // await api.delete(`/events/${eventId}`);
-                
+
                 setEvents(events.filter(event => event.id !== eventId));
             } catch (error) {
                 console.error('Error al eliminar evento:', error);
@@ -461,8 +458,8 @@ const ManageEvents = () => {
         try {
             // Aquí iría la llamada real a la API para actualizar el estado
             // await api.patch(`/events/${eventId}`, { status: newStatus });
-            
-            setEvents(events.map(event => 
+
+            setEvents(events.map(event =>
                 event.id === eventId ? { ...event, status: newStatus } : event
             ));
         } catch (error) {
@@ -530,10 +527,9 @@ const ManageEvents = () => {
                                             <select
                                                 value={event.status}
                                                 onChange={(e) => handleStatusChange(event.id, e.target.value)}
-                                                className={`px-3 py-1 rounded-full text-sm ${
-                                                    event.status === 'active' 
-                                                        ? 'bg-green-100 text-green-800' 
-                                                        : 'bg-blue-100 text-blue-800'
+                                                className={`px-3 py-1 rounded-full text-sm ${event.status === 'active'
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : 'bg-blue-100 text-blue-800'
                                                 }`}
                                             >
                                                 <option value="active">Activo</option>

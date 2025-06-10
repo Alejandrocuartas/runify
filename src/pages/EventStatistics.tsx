@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useGlobalState } from '../context';
 
 interface EventStats {
     id: number;
@@ -31,7 +30,6 @@ const EventStatistics = () => {
     const [selectedEvent, setSelectedEvent] = useState<number | null>(null);
     const [events, setEvents] = useState<{ id: number; title: string }[]>([]);
     const [stats, setStats] = useState<EventStats | null>(null);
-    const { token } = useGlobalState();
 
     useEffect(() => {
         const fetchData = async () => {
