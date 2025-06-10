@@ -1,4 +1,4 @@
-const servicesUrl: string = "https://6ryex271x6.execute-api.us-east-1.amazonaws.com/default";
+const servicesUrl: string = process.env.API || "http://localhost:3000";
 
 const runnifyTokenName: string = "token_runify";
 

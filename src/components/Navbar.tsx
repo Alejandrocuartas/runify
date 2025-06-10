@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import Logo from './Logo';
 import SearchBar from './SearchBar';
 import ProfileMenu from './ProfileMenu';
 
 const Navbar = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const location = useLocation();
+    const showSearchBar = !['/login', '/register'].includes(location.pathname.toLowerCase());
 
     const MenuIcon = () => (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -42,8 +44,8 @@ const Navbar = () => {
                     </div>
 
                     <div className="flex items-center gap-6">
-                        <SearchBar />
-                        <ProfileMenu />
+                        {showSearchBar && <SearchBar />}
+                        {showSearchBar && <ProfileMenu />}
                         <div className="md:hidden">
                             <button
                                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

@@ -50,10 +50,10 @@ const Register: FC = () => {
             setToken(token)
             navigate("/runner-dashboard");
 
-        } catch (error: unknown) {
+        } catch (error: any) {
             setLoading(false);
-            alert("Error al registrarse");
             console.error(error);
+            alert(error.message);
         }
 
     };

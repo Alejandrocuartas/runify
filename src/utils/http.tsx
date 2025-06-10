@@ -1,7 +1,12 @@
 import { servicesUrl } from "./constants";
 
 interface ErrorDetails {
-    message?: string;
+    errors?: { message: string }[];
+}
+
+
+const thowError = (error: ErrorDetails, statusText: string) => {
+    throw new Error(error.errors?.[0]?.message || statusText);
 }
 
 const SignUp = async (data: any = {}): Promise<any> => {
@@ -17,7 +22,7 @@ const SignUp = async (data: any = {}): Promise<any> => {
 
     if (!response.ok) {
         const errorDetails: ErrorDetails = await response.json();
-        throw new Error(errorDetails.message || response.statusText);
+        thowError(errorDetails, response.statusText);
     }
 
     return response.json();
@@ -36,7 +41,7 @@ const SignIn = async (data: any = {}): Promise<any> => {
 
     if (!response.ok) {
         const errorDetails: ErrorDetails = await response.json();
-        throw new Error(errorDetails.message || response.statusText);
+        thowError(errorDetails, response.statusText);
     }
 
     return response.json();
@@ -59,7 +64,7 @@ interface Location {
  *          sin realizar una llamada a la API.
  */
 const SearchLocationsSmart = async (city: string, token?: string): Promise<Location[]> => {
-    if (!city || city.trim().length < 4) {
+    if (!city || city.trim().length < 0) {
         // La consulta es demasiado corta, devuelve un array vacío inmediatamente.
         // Esto evita una llamada innecesaria a la API.
         return Promise.resolve([]);
@@ -83,19 +88,35 @@ const SearchLocations = async (city: string, token?: string): Promise<Location[]
 
     if (!response.ok) {
         const errorDetails: ErrorDetails = await response.json();
-        throw new Error(errorDetails.message || response.statusText);
+        thowError(errorDetails, response.statusText);
     }
 
     return response.json();
 };
 
-const CreateRace = async (data: any = {}, token?: string): Promise<any> => {
+export interface CreateRaceRequest {
+    title: string;
+    description: string;
+    imageUrl: string;
+    price: number;
+    priceUnit: string;
+    distance: number;
+    distanceUnit: string;
+    type: string;
+    date: string; // 06-10-2025T10:00:00Z
+    files?: string[];
+    coordinates: [number, number];
+    city: string;
+    amenities?: string[];
+}
+
+const CreateRace = async (data: CreateRaceRequest, token?: string): Promise<any> => {
     const headers = {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`
     };
 
-    const response = await fetch(servicesUrl + "/e/api/v1/events", {
+    const response = await fetch(servicesUrl + "/api/v1/events", {
         method: "POST",
         body: JSON.stringify(data),
         headers,
@@ -103,27 +124,7 @@ const CreateRace = async (data: any = {}, token?: string): Promise<any> => {
 
     if (!response.ok) {
         const errorDetails: ErrorDetails = await response.json();
-        throw new Error(errorDetails.message || response.statusText);
-    }
-
-    return response.json();
-};
-
-const UpdateRace = async (raceId: string, data: any = {}, token?: string): Promise<any> => {
-    const headers = {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-    };
-
-    const response = await fetch(servicesUrl + `/a/api/v1/update-race/${raceId}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-        headers,
-    });
-
-    if (!response.ok) {
-        const errorDetails: ErrorDetails = await response.json();
-        throw new Error(errorDetails.message || response.statusText);
+        thowError(errorDetails, response.statusText);
     }
 
     return response.json();
@@ -143,7 +144,7 @@ const RegisterToRace = async (raceId: string, data: any = {}, token?: string): P
 
     if (!response.ok) {
         const errorDetails: ErrorDetails = await response.json();
-        throw new Error(errorDetails.message || response.statusText);
+        thowError(errorDetails, response.statusText);
     }
 
     return response.json();
@@ -152,27 +153,27 @@ const RegisterToRace = async (raceId: string, data: any = {}, token?: string): P
 interface GenerateUploadUrlRequest {
     fileName: string;
     contentType: string;
-  }
-  
-  interface GenerateUploadUrlResponse {
+}
+
+interface GenerateUploadUrlResponse {
     uploadUrl: string;
     s3Key: string;
-  }
-  
-  interface ConfirmUploadRequest {
+}
+
+interface ConfirmUploadRequest {
     fileName: string;
     contentType: string;
     s3Key: string;
-  }
+}
 
 const UploadFileToServer = async (file: File, jwt: string | null): Promise<any> => {
     if (!jwt) {
         throw new Error("No token provided");
     }
 
-    const fileName = file.name; 
+    const fileName = file.name;
     const contentType = file.type;
-  
+
     // Step 1: Generate S3 presigned URL
     const generateUrlPayload: GenerateUploadUrlRequest = { fileName, contentType };
     const presignResponse = await fetch(`${servicesUrl}/api/v1/files/generate-upload-url`, {
@@ -180,24 +181,24 @@ const UploadFileToServer = async (file: File, jwt: string | null): Promise<any> 
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwt}` },
         body: JSON.stringify(generateUrlPayload),
     });
-  
+
     if (!presignResponse.ok) {
         const errorData = await presignResponse.json().catch(() => ({ message: 'Error desconocido al generar URL' }));
         throw new Error(errorData.message || `Error al generar URL para ${fileName}`);
     }
     const { uploadUrl, s3Key }: GenerateUploadUrlResponse = await presignResponse.json();
-  
+
     // Step 2: Upload file to S3
     const s3UploadResponse = await fetch(uploadUrl, {
         method: 'PUT',
         headers: { 'Content-Type': contentType },
         body: file,
     });
-  
+
     if (!s3UploadResponse.ok) {
         throw new Error(`Error al subir ${fileName} a S3 (status: ${s3UploadResponse.status})`);
     }
-  
+
     // Step 3: Confirm upload
     const confirmUploadPayload: ConfirmUploadRequest = { fileName, contentType, s3Key };
     const confirmResponse = await fetch(`${servicesUrl}/api/v1/files/confirm-upload`, {
@@ -205,14 +206,14 @@ const UploadFileToServer = async (file: File, jwt: string | null): Promise<any> 
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwt}` },
         body: JSON.stringify(confirmUploadPayload),
     });
-  
+
     if (!confirmResponse.ok) {
         const errorData = await confirmResponse.json().catch(() => ({ message: 'Error desconocido al confirmar subida' }));
         throw new Error(errorData.message || `Error al confirmar subida para ${fileName}`);
     }
 
-    const  { file: fileUrl }: { file: string } = await confirmResponse.json();
-  
+    const { file: fileUrl }: { file: string } = await confirmResponse.json();
+
     return { fileName, contentType, s3Key, fileUrl };
 };
 
@@ -220,9 +221,8 @@ export {
     SignUp,
     SignIn,
     CreateRace,
-    UpdateRace,
     RegisterToRace,
     SearchLocations,
     UploadFileToServer,
-    SearchLocationsSmart
+    SearchLocationsSmart,
 };

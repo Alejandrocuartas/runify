@@ -4,8 +4,8 @@
   "main": "src/index.tsx",
   "type": "module",
   "scripts": {
-    "start": "webpack serve --env API= --mode development --env development",
-    "build": "webpack --env API= --mode production && cp _redirects docs/",
+    "start": "webpack serve --env API=http://localhost:3000 --mode development --env development",
+    "build": "webpack --env API=https://6ryex271x6.execute-api.us-east-1.amazonaws.com/default --mode production && cp _redirects docs/",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "prepare": "husky"
   },

@@ -28,10 +28,6 @@ const Login: FC = () => {
             const response = await SignIn({ email, password });
             setLoading(false);
 
-            if (!response.token) {
-                throw new Error("Error de autenticación");
-            }
-
             localStorage.setItem(runnifyTokenName, response.token);
             setLogged(true)
             setToken(response.token)
@@ -39,8 +35,8 @@ const Login: FC = () => {
 
         } catch (error: any) {
             setLoading(false);
-            alert(error.message || "Credenciales incorrectas");
             console.error(error);
+            alert(error.message);
         }
 
     };

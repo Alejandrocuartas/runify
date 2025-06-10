@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SearchLocationsSmart, UploadFileToServer } from '../utils/http';
+import { CreateRace, CreateRaceRequest, SearchLocationsSmart, UploadFileToServer } from '../utils/http';
 import { runnifyTokenName } from '../utils/constants';
 import { useGlobalState } from '../context';
 import TagInput from '../components/TagInput';
@@ -10,31 +10,28 @@ interface EventFile {
     s3Key: string;
 }
 
-interface DistancePrice {
-    distance: string;
-    price: string | number;
-}
-
 interface EventData {
     title: string;
     description: string;
-    date: string;
-    startTime: string;
-    subType: string;
-    customSubType?: string;
-    distancePrices: DistancePrice[];
-    maxParticipants: number;
+    imageUrl: string;
+    price: number;
+    priceUnit: string;
+    distance: number;
     distanceUnit: string;
+    type: string;
+    dateTime: string;
+    secondaryImagesUrls?: string[];
+    coordinates: number[];
     city: string;
     amenities?: string[];
-    coordinates?: number[];
+
+    // date and start time are taken separately but combined to create dateTime
+    date: string;
+    startTime: string;
+    // secondary images uploaded to s3 and their urls are stored in secondaryImagesUrls
     secondaryImages?: EventFile[];
+    // image uploaded to s3 and its url is stored in imageUrl
     image?: EventFile;
-    files?: EventFile[];
-    type?: string;
-    priceUnit?: string;
-    imageUrl?: string;
-    secondaryImagesUrls?: string[];
 }
 
 interface Location {
@@ -42,32 +39,9 @@ interface Location {
     coordinates: number[];
 }
 
-const getTypeBySubType = (subType: string): string | undefined => {
-    const typeRace = "race";
-    if (subType === "marathon" || subType === "trail" || subType === "fun-run") {
-        return typeRace;
-    }
-    return undefined;
-};
-
 const combineDateTime = (dateStr: string, timeStr: string): string => {
     const date = new Date(`${dateStr}T${timeStr}:00Z`);
     return date.toISOString();
-};
-
-const formatNumber = (value: string): string => {
-    // Eliminar todos los caracteres no numéricos
-    const numericValue = value.replace(/\D/g, '');
-    
-    // Si está vacío, retornar string vacío
-    if (!numericValue) return '';
-    
-    // Formatear con separadores de miles
-    return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-};
-
-const unformatNumber = (value: string | number): string => {
-    return String(value).replace(/\./g, '');
 };
 
 const AddRace = () => {
@@ -79,15 +53,17 @@ const AddRace = () => {
         description: '',
         date: '',
         startTime: '',
-        subType: '',
-        customSubType: '',
-        distancePrices: [],
-        maxParticipants: 0,
-        distanceUnit: '',
+        distance: 0,
+        distanceUnit: 'kilometers',
+        price: 0,
+        priceUnit: 'COP',
         city: "",
         amenities: [],
         secondaryImages: [],
-        image: undefined,
+        imageUrl: '',
+        type: '',
+        dateTime: '',
+        coordinates: [],
     });
 
     const { token } = useGlobalState();
@@ -102,26 +78,6 @@ const AddRace = () => {
             ...prev,
             [name]: newValue
         }));
-    };
-
-    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-        const { name } = e.target;
-        if (eventData[name as keyof EventData] === 0) {
-            setEventData((prev) => ({
-                ...prev,
-                [name]: "",
-            }));
-        }
-    };
-
-    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        if (value === "") {
-            setEventData((prev) => ({
-                ...prev,
-                [name]: 0,
-            }));
-        }
     };
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -150,12 +106,19 @@ const AddRace = () => {
         }));
     };
 
+    const handleRemoveSecondaryImage = (indexToRemove: number) => {
+        setEventData(prev => ({
+            ...prev,
+            secondaryImages: prev.secondaryImages?.filter((_, index) => index !== indexToRemove),
+            secondaryImagesUrls: prev.secondaryImagesUrls?.filter((_, index) => index !== indexToRemove)
+        }));
+    };
+
     const handleSecondaryImagesUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
         if (files.length > 0) {
             setLoading(true);
-            const currentSecondaryImages = eventData.secondaryImages ? [...eventData.secondaryImages] : [];
-            const uploadPromises = files.map(file => 
+            const uploadPromises = files.map(file =>
                 UploadFileToServer(file, token).then(uploadedFile => {
                     return uploadedFile;
                 }).catch(error => {
@@ -168,16 +131,13 @@ const AddRace = () => {
             try {
                 const results = await Promise.all(uploadPromises);
                 const successfullyUploadedFiles = results.filter(result => result !== null) as any[];
-                const secondaryImagesUrls = successfullyUploadedFiles.map(file => file.fileUrl);
+                const newSecondaryImagesUrls = successfullyUploadedFiles.map(file => file.fileUrl);
                 setEventData(prev => ({
                     ...prev,
-                    secondaryImages: [...currentSecondaryImages, ...successfullyUploadedFiles],
-                    secondaryImagesUrls: secondaryImagesUrls
+                    secondaryImages: [...(prev.secondaryImages || []), ...successfullyUploadedFiles],
+                    secondaryImagesUrls: [...(prev.secondaryImagesUrls || []), ...newSecondaryImagesUrls]
                 }));
-                
-                if (successfullyUploadedFiles.length > 0) {
-                    alert(`${successfullyUploadedFiles.length} de ${files.length} archivos secundarios subidos con éxito.`);
-                }
+
                 if (successfullyUploadedFiles.length < files.length) {
                     alert(`${files.length - successfullyUploadedFiles.length} archivos secundarios no pudieron subirse.`);
                 }
@@ -187,33 +147,14 @@ const AddRace = () => {
                 alert("Ocurrió un error durante la subida de algunos archivos secundarios.");
             } finally {
                 e.target.value = '';
+                setLoading(false);
             }
         }
     };
 
-    const handleDistancePriceChange = (distances: string[]) => {
-        const currentPrices = eventData.distancePrices;
-        const newDistancePrices: DistancePrice[] = distances.map(distance => {
-            const existing = currentPrices.find(dp => dp.distance === distance);
-            return existing || { distance, price: '' };
-        });
-        setEventData(prev => ({
-            ...prev,
-            distancePrices: newDistancePrices
-        }));
-    };
 
-    const handlePriceChange = (distance: string, price: string) => {
-        // Formatear el número con separadores de miles
-        const formattedPrice = formatNumber(price);
-        
-        setEventData(prev => ({
-            ...prev,
-            distancePrices: prev.distancePrices.map(dp => 
-                dp.distance === distance ? { ...dp, price: formattedPrice } : dp
-            )
-        }));
-    };
+
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -226,43 +167,26 @@ const AddRace = () => {
             return;
         }
 
-        const finalEventData: EventData = {
-            ...eventData,
+        const finalEventData: CreateRaceRequest = {
+            title: eventData.title,
+            description: eventData.description,
+            imageUrl: eventData.imageUrl,
+            price: eventData.price,
+            priceUnit: eventData.priceUnit,
+            distance: eventData.distance,
+            distanceUnit: eventData.distanceUnit,
+            type: eventData.type,
             date: combineDateTime(eventData.date, eventData.startTime),
-            type: getTypeBySubType(eventData.subType),
-            priceUnit: "COP",
-            distancePrices: eventData.distancePrices.map(dp => ({
-                ...dp,
-                price: Number(unformatNumber(dp.price))
-            })),
-            subType: eventData.subType === 'others' ? eventData.customSubType || '' : eventData.subType
+            coordinates: eventData.coordinates as [number, number],
+            city: eventData.city,
+            amenities: eventData.amenities,
+            files: eventData.secondaryImagesUrls,
         };
-
-        if (!finalEventData.city) {
-            delete finalEventData.coordinates;
-        }
-        
-        if (finalEventData.files === undefined || (Array.isArray(finalEventData.files) && finalEventData.files.length === 0)) {
-            delete finalEventData.files;
-        }
 
         try {
             console.log("Enviando datos del evento:", finalEventData);
-            const response = await fetch("https://tu-api.com/events", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(finalEventData),
-            });
+            const result = await CreateRace(finalEventData, token);
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(()=> ({message: "Error al crear el evento"}));
-                throw new Error(errorData.message || `Error del servidor: ${response.status}`);
-            }
-
-            const result = await response.json();
             console.log("Evento creado con éxito:", result);
             alert("Evento creado con éxito!");
             setEventData({
@@ -270,15 +194,17 @@ const AddRace = () => {
                 description: '',
                 date: '',
                 startTime: '',
-                subType: '',
-                customSubType: '',
-                distancePrices: [],
-                maxParticipants: 0,
-                distanceUnit: '',
                 city: "",
                 amenities: [],
                 secondaryImages: [],
-                image: undefined,
+                imageUrl: '',
+                price: 0,
+                priceUnit: '',
+                distance: 0,
+                distanceUnit: '',
+                type: '',
+                dateTime: '',
+                coordinates: [],
             });
         } catch (error) {
             console.error("Error en el proceso de creación del evento:", error);
@@ -290,17 +216,17 @@ const AddRace = () => {
 
     const handleChangeLocation = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = e.target;
-        if (token && value.length > 2) {
+        if (token && value.length > 0) {
             try {
                 const locations = await SearchLocationsSmart(value, token);
                 setCities(locations);
             } catch (error) {
                 console.error("Error al buscar ciudades:", error);
-            } 
+            }
         } else {
             setCities([]);
         }
-        setEventData(prev => ({ ...prev, city: value, coordinates: undefined }));
+        setEventData(prev => ({ ...prev, city: value, coordinates: [] }));
         setShowDropdown(true);
     };
 
@@ -367,6 +293,25 @@ const AddRace = () => {
                             onChange={handleSecondaryImagesUpload}
                             className="w-full p-2 border rounded"
                         />
+                        {eventData.secondaryImages && eventData.secondaryImages.length > 0 && (
+                            <div className="mt-4">
+                                <h3 className="text-base font-semibold">Archivos cargados:</h3>
+                                <ul className="mt-2 space-y-2">
+                                    {eventData.secondaryImages.map((file, index) => (
+                                        <li key={file.s3Key || index} className="flex justify-between items-center bg-gray-50 p-2 rounded">
+                                            <span className="text-sm font-medium text-gray-800">{file.fileName}</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveSecondaryImage(index)}
+                                                className="ml-4 text-red-600 hover:text-red-800 text-xs font-bold"
+                                            >
+                                                ELIMINAR
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -398,108 +343,79 @@ const AddRace = () => {
                             />
                         </div>
 
-                        <div className="col-span-2">
-                            <label className="block mb-2">Distancias</label>
-                            <TagInput
-                                tags={eventData.distancePrices.map(dp => dp.distance)}
-                                onTagsChange={handleDistancePriceChange}
-                                placeholder="Agregar distancia (ej: 5k, 10k, 21k)"
-                                className="w-full"
+                        <div>
+                            <label className="block mb-2">Distancia</label>
+                            <input
+                                type="number"
+                                name="distance"
+                                onChange={handleChange}
+                                className="w-full border rounded p-2"
+                                placeholder="Agregar distancia (ej: 5, 10, 21)"
                             />
                         </div>
-
-                        {eventData.distancePrices.length > 0 && (
-                            <div className="col-span-2">
-                                <label className="block mb-2">Precios por Distancia</label>
-                                <div className="space-y-2">
-                                    {eventData.distancePrices.map((dp) => (
-                                        <div key={dp.distance} className="flex items-center gap-4">
-                                            <span className="w-24">{dp.distance}</span>
-                                            <input
-                                                type="text"
-                                                inputMode="numeric"
-                                                value={dp.price}
-                                                onChange={(e) => handlePriceChange(dp.distance, e.target.value)}
-                                                className="flex-1 p-2 border rounded"
-                                                placeholder="Ingrese el precio"
-                                                required
-                                            />
-                                            <span className="text-gray-500">COP</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
                         <div>
-                            <label className="block mb-2">Unidad de Distancia</label>
+                            <label className="block mb-2">Unidad de Distancia (Ej: Kilómetros, Millas)</label>
                             <select
                                 name="distanceUnit"
                                 value={eventData.distanceUnit}
                                 onChange={handleChange}
-                                className="w-full p-2 border rounded"
+                                className="w-full border rounded p-2"
                                 required
                             >
-                                <option value="">Seleccionar Unidad</option>
                                 <option value="kilometers">Kilómetros</option>
                                 <option value="miles">Millas</option>
+                                <option value="laps">Vueltas</option>
                             </select>
                         </div>
-
+                        <div>
+                            <label className="block mb-2">Precio</label>
+                            <input
+                                type="number"
+                                name="price"
+                                onChange={handleChange}
+                                className="w-full border rounded p-2"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block mb-2">Moneda</label>
+                            <select
+                                name="priceUnit"
+                                value={eventData.priceUnit}
+                                onChange={handleChange}
+                                className="w-full border rounded p-2"
+                                required
+                            >
+                                <option value="COP">COP</option>
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                            </select>
+                        </div>
                         <div>
                             <label className="block mb-2">Tipo</label>
                             <select
-                                name="subType"
-                                value={eventData.subType}
+                                name="type"
+                                value={eventData.type}
                                 onChange={handleChange}
                                 className="w-full p-2 border rounded"
                                 required
                             >
                                 <option value="">Seleccionar Tipo</option>
-                                <option value="Short distance race">Carrera de corta distancia</option>
-                                <option value="Medium distance race">Carrera de media distancia</option>
-                                <option value="Long distance race">Carrera de larga distancia</option>
-                                <option value="Trail race">Carrera de trail</option>
-                                <option value="Tematic or recreational race">Carrera tematica o recreativa</option>
-                                <option value="Asphalt race">Carrera en Asfalto</option>
-                                <option value="Charity race or race with a cause">Carrera Benefica o con Causa</option>
-                                <option value="Obstacle race">Carrera de Obstaculos</option>
-                                <option value="Individual race">Carrera individual</option>
-                                <option value="Team race">Carrera en Equpos</option>
-                                <option value="Race with a theme">Carrera con tema</option>
-                                <option value="others">Otros</option>
+                                <option value="short_distance_race">Carrera de corta distancia</option>
+                                <option value="medium_distance_race">Carrera de media distancia</option>
+                                <option value="long_distance_race">Carrera de larga distancia</option>
+                                <option value="trail_race">Carrera de trail</option>
+                                <option value="tematic_or_recreational_race">Carrera tematica o recreativa</option>
+                                <option value="asphalt_race">Carrera en Asfalto</option>
+                                <option value="charity_race_or_race_with_a_cause">Carrera Benefica o con Causa</option>
+                                <option value="obstacle_race">Carrera de Obstaculos</option>
+                                <option value="individual_race">Carrera individual</option>
+                                <option value="team_race">Carrera en Equpos</option>
+                                <option value="race_with_a_theme">Carrera con tema</option>
+                                <option value="other">Otro</option>
                             </select>
-                            {eventData.subType === 'others' && (
-                                <div className="mt-2">
-                                    <input
-                                        type="text"
-                                        name="customSubType"
-                                        value={eventData.customSubType}
-                                        onChange={handleChange}
-                                        className="w-full p-2 border rounded"
-                                        placeholder="Especifique el tipo de carrera"
-                                        required
-                                    />
-                                </div>
-                            )}
-                        </div>
-
-                        <div>
-                            <label className="block mb-2">Máximo de Participantes</label>
-                            <input
-                                type="number"
-                                name="maxParticipants"
-                                value={eventData.maxParticipants}
-                                onChange={handleChange}
-                                onFocus={handleFocus}
-                                onBlur={handleBlur}
-                                className="w-full p-2 border rounded"
-                                min="1"
-                                required
-                            />
                         </div>
                     </div>
-
                     <div className="relative">
                         <label className="block mb-2">Ciudad</label>
                         <input
@@ -532,7 +448,7 @@ const AddRace = () => {
                         <TagInput
                             tags={eventData.amenities || []}
                             onTagsChange={handleAmenitiesChange}
-                            placeholder="Agregar beneficio (ej: Medalla, Hidratación, Camiseta)"
+                            placeholder="Agregar beneficio (ej: Medalla, Hidratación, Camiseta, Fruta, etc)"
                             className="w-full"
                         />
                         <p className="mt-1 text-sm text-gray-500">
