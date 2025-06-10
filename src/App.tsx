@@ -11,6 +11,8 @@ import RunnerDashboard from "./pages/RunnerDashboard";
 import AddRace from "./pages/AddRace";
 import EventDetailPage from "./pages/EventDetailPage";
 import RaceRegistrationPage from "./pages/RaceRegistrationPage";
+import ManageEvents from "./pages/ManageEvents";
+import EventStatistics from "./pages/EventStatistics";
 
 const App = () => {
     return (
@@ -27,6 +29,8 @@ const App = () => {
                     <Route path="/events/:eventId" element={<EventDetailPage />} />
                     <Route path="/events/:eventId/register" element={<RaceRegistrationPage />} />
                     <Route path="/add-race" element={<AddRace/>} />
+                    <Route path="/manage-events" element={<ManageEvents/>} />
+                    <Route path="/event-statistics" element={<EventStatistics/>} />
                 </Routes>
             </Layout>
         </BrowserRouter>

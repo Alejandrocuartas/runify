@@ -2,11 +2,17 @@ import React, { useState } from 'react';
 import { SearchLocationsSmart, UploadFileToServer } from '../utils/http';
 import { runnifyTokenName } from '../utils/constants';
 import { useGlobalState } from '../context';
+import TagInput from '../components/TagInput';
 
 interface EventFile {
     fileName: string;
     contentType: string;
     s3Key: string;
+}
+
+interface DistancePrice {
+    distance: string;
+    price: string | number;
 }
 
 interface EventData {
@@ -15,11 +21,11 @@ interface EventData {
     date: string;
     startTime: string;
     subType: string;
-    price: number;
+    customSubType?: string;
+    distancePrices: DistancePrice[];
     maxParticipants: number;
     distanceUnit: string;
     city: string;
-    distance: number;
     amenities?: string[];
     coordinates?: number[];
     secondaryImages?: EventFile[];
@@ -49,6 +55,21 @@ const combineDateTime = (dateStr: string, timeStr: string): string => {
     return date.toISOString();
 };
 
+const formatNumber = (value: string): string => {
+    // Eliminar todos los caracteres no numéricos
+    const numericValue = value.replace(/\D/g, '');
+    
+    // Si está vacío, retornar string vacío
+    if (!numericValue) return '';
+    
+    // Formatear con separadores de miles
+    return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
+
+const unformatNumber = (value: string | number): string => {
+    return String(value).replace(/\./g, '');
+};
+
 const AddRace = () => {
     const [loading, setLoading] = useState(false);
     const [cities, setCities] = useState<Location[]>([]);
@@ -59,11 +80,11 @@ const AddRace = () => {
         date: '',
         startTime: '',
         subType: '',
-        price: 0,
+        customSubType: '',
+        distancePrices: [],
         maxParticipants: 0,
         distanceUnit: '',
         city: "",
-        distance: 0,
         amenities: [],
         secondaryImages: [],
         image: undefined,
@@ -122,11 +143,10 @@ const AddRace = () => {
         }
     };
 
-    const handleAmenitiesChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const values: string[] = Array.from(e.target.selectedOptions, option => option.value);
+    const handleAmenitiesChange = (amenities: string[]) => {
         setEventData(prev => ({
             ...prev,
-            amenities: values
+            amenities: amenities
         }));
     };
 
@@ -171,6 +191,30 @@ const AddRace = () => {
         }
     };
 
+    const handleDistancePriceChange = (distances: string[]) => {
+        const currentPrices = eventData.distancePrices;
+        const newDistancePrices: DistancePrice[] = distances.map(distance => {
+            const existing = currentPrices.find(dp => dp.distance === distance);
+            return existing || { distance, price: '' };
+        });
+        setEventData(prev => ({
+            ...prev,
+            distancePrices: newDistancePrices
+        }));
+    };
+
+    const handlePriceChange = (distance: string, price: string) => {
+        // Formatear el número con separadores de miles
+        const formattedPrice = formatNumber(price);
+        
+        setEventData(prev => ({
+            ...prev,
+            distancePrices: prev.distancePrices.map(dp => 
+                dp.distance === distance ? { ...dp, price: formattedPrice } : dp
+            )
+        }));
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -187,6 +231,11 @@ const AddRace = () => {
             date: combineDateTime(eventData.date, eventData.startTime),
             type: getTypeBySubType(eventData.subType),
             priceUnit: "COP",
+            distancePrices: eventData.distancePrices.map(dp => ({
+                ...dp,
+                price: Number(unformatNumber(dp.price))
+            })),
+            subType: eventData.subType === 'others' ? eventData.customSubType || '' : eventData.subType
         };
 
         if (!finalEventData.city) {
@@ -222,11 +271,11 @@ const AddRace = () => {
                 date: '',
                 startTime: '',
                 subType: '',
-                price: 0,
+                customSubType: '',
+                distancePrices: [],
                 maxParticipants: 0,
                 distanceUnit: '',
                 city: "",
-                distance: 0,
                 amenities: [],
                 secondaryImages: [],
                 image: undefined,
@@ -349,20 +398,38 @@ const AddRace = () => {
                             />
                         </div>
 
-                        <div>
-                            <label className="block mb-2">Distancia</label>
-                            <input
-                                type="number"
-                                name="distance"
-                                value={eventData.distance}
-                                onChange={handleChange}
-                                onFocus={handleFocus}
-                                onBlur={handleBlur}
-                                className="w-full p-2 border rounded"
-                                min="1"
-                                required
+                        <div className="col-span-2">
+                            <label className="block mb-2">Distancias</label>
+                            <TagInput
+                                tags={eventData.distancePrices.map(dp => dp.distance)}
+                                onTagsChange={handleDistancePriceChange}
+                                placeholder="Agregar distancia (ej: 5k, 10k, 21k)"
+                                className="w-full"
                             />
                         </div>
+
+                        {eventData.distancePrices.length > 0 && (
+                            <div className="col-span-2">
+                                <label className="block mb-2">Precios por Distancia</label>
+                                <div className="space-y-2">
+                                    {eventData.distancePrices.map((dp) => (
+                                        <div key={dp.distance} className="flex items-center gap-4">
+                                            <span className="w-24">{dp.distance}</span>
+                                            <input
+                                                type="text"
+                                                inputMode="numeric"
+                                                value={dp.price}
+                                                onChange={(e) => handlePriceChange(dp.distance, e.target.value)}
+                                                className="flex-1 p-2 border rounded"
+                                                placeholder="Ingrese el precio"
+                                                required
+                                            />
+                                            <span className="text-gray-500">COP</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         <div>
                             <label className="block mb-2">Unidad de Distancia</label>
@@ -389,26 +456,32 @@ const AddRace = () => {
                                 required
                             >
                                 <option value="">Seleccionar Tipo</option>
-                                <option value="marathon">Maratón</option>
-                                <option value="trail">Trail</option>
-                                <option value="fun-run">Carrera Divertida</option>
+                                <option value="Short distance race">Carrera de corta distancia</option>
+                                <option value="Medium distance race">Carrera de media distancia</option>
+                                <option value="Long distance race">Carrera de larga distancia</option>
+                                <option value="Trail race">Carrera de trail</option>
+                                <option value="Tematic or recreational race">Carrera tematica o recreativa</option>
+                                <option value="Asphalt race">Carrera en Asfalto</option>
+                                <option value="Charity race or race with a cause">Carrera Benefica o con Causa</option>
+                                <option value="Obstacle race">Carrera de Obstaculos</option>
+                                <option value="Individual race">Carrera individual</option>
+                                <option value="Team race">Carrera en Equpos</option>
+                                <option value="Race with a theme">Carrera con tema</option>
+                                <option value="others">Otros</option>
                             </select>
-                        </div>
-
-                        <div>
-                            <label className="block mb-2">Precio</label>
-                            <input
-                                type="number"
-                                name="price"
-                                value={eventData.price}
-                                onChange={handleChange}
-                                onFocus={handleFocus}
-                                onBlur={handleBlur}
-                                className="w-full p-2 border rounded"
-                                min="0"
-                                step="0.01"
-                                required
-                            />
+                            {eventData.subType === 'others' && (
+                                <div className="mt-2">
+                                    <input
+                                        type="text"
+                                        name="customSubType"
+                                        value={eventData.customSubType}
+                                        onChange={handleChange}
+                                        className="w-full p-2 border rounded"
+                                        placeholder="Especifique el tipo de carrera"
+                                        required
+                                    />
+                                </div>
+                            )}
                         </div>
 
                         <div>
@@ -454,19 +527,17 @@ const AddRace = () => {
                         )}
                     </div>
 
-                    <div>
-                        <label className="block mb-2">Servicios</label>
-                        <select
-                            multiple
-                            name="amenities"
-                            onChange={handleAmenitiesChange}
-                            className="w-full p-2 border rounded"
-                        >
-                            <option value="Estaciones de Agua">Estaciones de Agua</option>
-                            <option value="Soporte Médico">Soporte Médico</option>
-                            <option value="Medalla de Finalización">Medalla de Finalización</option>
-                            <option value="Camiseta">Camiseta</option>
-                        </select>
+                    <div className="col-span-2">
+                        <label className="block mb-2">Beneficios</label>
+                        <TagInput
+                            tags={eventData.amenities || []}
+                            onTagsChange={handleAmenitiesChange}
+                            placeholder="Agregar beneficio (ej: Medalla, Hidratación, Camiseta)"
+                            className="w-full"
+                        />
+                        <p className="mt-1 text-sm text-gray-500">
+                            Presiona Enter para agregar cada beneficio
+                        </p>
                     </div>
 
                     <button
