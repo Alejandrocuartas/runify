@@ -5,19 +5,6 @@ import { ResponsiveContainer, ResponsiveGrid } from '../components/Layout';
 import CardSkeleton from '../components/CardSkeleton';
 import { EventModel, PaginatedResponse, GetRaces } from '../utils/http';
 
-interface Event {
-    id: number;
-    title: string;
-    description: string;
-    imageUrl: string;
-    date: string;
-    distance: string;
-    location: string;
-    price: number;
-    rating: string;
-    type: string;
-}
-
 interface Filters {
     type?: string;
     year?: number;
@@ -37,7 +24,7 @@ const Events: FC<EventsProps> = ({ searchQuery = '' }) => {
         const fetchEvents = async () => {
             setLoading(true);
             try {
-                const response = await GetRaces({
+                await GetRaces({
                     limit: 50,
                     type: filters.type || '',
                     year: filters.year || undefined,

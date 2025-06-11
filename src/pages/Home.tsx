@@ -1,29 +1,15 @@
 import React, { FC, useEffect, useState } from 'react';
 import Card from '../components/Card';
-// Import CardProps from the Card component file is the best practice:
-// import Card, { CardProps } from '../components/Card';
 import { Link } from 'react-router-dom';
 import { useGlobalState } from '../context';
-import { EventModel, GetRaces, PaginatedResponse } from '../utils/http';
-// Define the structure for a running event item
-interface RunningEvent {
-    id: number;
-    title: string;
-    description: string;
-    imageUrl: string;
-    date: string;
-    distance: string;
-}
+import { EventModel, GetRaces } from '../utils/http';
 
-
-// Define the structure for a feature item - now with direct text
 interface Feature {
     icon: string;
-    title: string; // Changed from titleKey
-    description: string; // Changed from descriptionKey
+    title: string;
+    description: string;
 }
 
-// Features data with Spanish text
 const features: Feature[] = [
     {
         icon: "🏃",
@@ -42,37 +28,9 @@ const features: Feature[] = [
     }
 ];
 
-// Define the Home component using Arrow Function and FC type
 const Home: FC = () => {
     const [events, setEvents] = useState<EventModel[]>([]);
     const { requestLocation, location } = useGlobalState()
-    const runningEvents: RunningEvent[] = [
-        {
-            id: 1,
-            title: "Maratón de la Ciudad",
-            description: "Corre por las calles principales en nuestro evento anual.",
-            imageUrl: "https://images.unsplash.com/photo-1452626038306-9aae5e071dd3?w=500",
-            date: "Marzo 15, 2024",
-            distance: "42km"
-        },
-        {
-            id: 2,
-            title: "Trail Nocturno",
-            description: "Una aventura bajo las estrellas en senderos desafiantes.",
-            imageUrl: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=500",
-            date: "Abril 5, 2024",
-            distance: "15km"
-        },
-        {
-            id: 3,
-            title: "Carrera Playera",
-            description: "Disfruta del sol y la arena en esta carrera divertida.",
-            imageUrl: "https://images.unsplash.com/photo-1538583297924-3cd1cacc7f17?w=500",
-            date: "Mayo 20, 2024",
-            distance: "10km"
-        }
-    ];
-
     useEffect(() => {
         requestLocation()
     }, [requestLocation])
@@ -83,11 +41,10 @@ const Home: FC = () => {
             latitude: location?.coordinates[0],
             longitude: location?.coordinates[1],
         }).then(r => setEvents(r.data));
-    }, []);
+    }, [location?.coordinates]);
 
     return (
         <div className="space-y-16">
-            {/* Hero Section */}
             <div className="relative h-[60vh] md:h-[75vh] lg:h-[80vh] flex items-center rounded-[2.5rem] overflow-hidden">
                 <div
                     className="absolute inset-0 bg-cover bg-center"
@@ -113,7 +70,6 @@ const Home: FC = () => {
                 </div>
             </div>
 
-            {/* Features Section */}
             <div className="max-w-[1200px] mx-auto px-5">
                 <div className="grid md:grid-cols-3 gap-8 py-16">
                     {features.map((feature: Feature, index: number) => (
@@ -128,7 +84,6 @@ const Home: FC = () => {
                 </div>
             </div>
 
-            {/* Upcoming Events Section */}
             <div className="py-5 max-w-[1200px] mx-auto px-5">
                 <h2 className="text-center mb-8 text-gray-800 text-2xl font-semibold">
                     Próximos Eventos
@@ -143,7 +98,6 @@ const Home: FC = () => {
                 </div>
             </div>
 
-            {/* About Section */}
             <div className="bg-gray-50 py-16">
                 <div className="max-w-[1200px] mx-auto px-5">
                     <div className="max-w-3xl mx-auto text-center">
@@ -161,7 +115,6 @@ const Home: FC = () => {
                 </div>
             </div>
 
-            {/* CTA Section */}
             <div className="max-w-[1200px] mx-auto px-5 py-16">
                 <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-3xl p-12 text-center text-white">
                     <h2 className="text-3xl font-bold mb-6">¿Listo para Correr?</h2>
