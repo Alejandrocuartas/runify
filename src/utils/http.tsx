@@ -130,25 +130,7 @@ const CreateRace = async (data: CreateRaceRequest, token?: string): Promise<any>
     return response.json();
 };
 
-const RegisterToRace = async (raceId: string, data: any = {}, token?: string): Promise<any> => {
-    const headers = {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-    };
 
-    const response = await fetch(servicesUrl + `/a/api/v1/races/${raceId}/register`, {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers,
-    });
-
-    if (!response.ok) {
-        const errorDetails: ErrorDetails = await response.json();
-        thowError(errorDetails, response.statusText);
-    }
-
-    return response.json();
-};
 
 interface GenerateUploadUrlRequest {
     fileName: string;
@@ -217,12 +199,83 @@ const UploadFileToServer = async (file: File, jwt: string | null): Promise<any> 
     return { fileName, contentType, s3Key, fileUrl };
 };
 
+interface GetEventsRequestFilters {
+    user?: number;
+    limit?: number;
+    page?: number;
+    latitude?: number;
+    longitude?: number;
+    id?: number;
+    year?: number;
+    month?: number;
+    type?: string;
+}
+
+const fromFiltersToQueryString = (filters?: GetEventsRequestFilters): string => {
+    if (!filters) {
+        return "";
+    }
+
+    const queryString = new URLSearchParams(filters as Record<string, string>).toString();
+    return queryString.length > 0 ? "?" + queryString : "";
+}
+
+export interface EventModel {
+    id?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
+    title: string;
+    description: string;
+    imageUrl: string;
+    userId?: number;
+    files?: string[];
+    type?: string;
+    date: string;
+    price: number;
+    priceUnit: string;
+    distance: number;
+    distanceUnit: string;
+    subEvents?: any[];
+    location: {
+        type: string;
+        coordinates: [number, number];
+    };
+    city: string;
+    amenities?: string[];
+}
+
+export interface PaginatedResponse<T> {
+    total: number;
+    page: number;
+    limit: number;
+    data: T[];
+}
+
+const GetRaces = async (filters?: GetEventsRequestFilters): Promise<PaginatedResponse<EventModel>> => {
+    const headers = {
+        "Content-Type": "application/json"
+    };
+
+    const response = await fetch(servicesUrl + "/api/v1/events" + fromFiltersToQueryString(filters), {
+        method: "GET",
+        headers,
+    });
+
+    if (!response.ok) {
+        const errorDetails: ErrorDetails = await response.json();
+        thowError(errorDetails, response.statusText);
+    }
+
+    return response.json();
+}
+
 export {
     SignUp,
     SignIn,
     CreateRace,
-    RegisterToRace,
     SearchLocations,
     UploadFileToServer,
     SearchLocationsSmart,
+    GetRaces,
 };

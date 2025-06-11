@@ -1,27 +1,20 @@
 import React, { FC } from 'react';
 import { Link } from 'react-router-dom';
 import ResponsiveCard from './ResponsiveCard';
+import { EventModel } from '../utils/http';
+import { distanceUnitsSymbols } from '../utils/constants';
 
-interface CardProps {
-    id: number;
-    title: string;
-    description: string;
-    imageUrl: string;
-    date: string;
-    distance: string;
-    location?: string;
-    price?: string;
-}
-
-const Card: FC<CardProps> = ({
+const Card: FC<EventModel> = ({
     id,
     title,
     description,
     imageUrl,
     date,
     distance,
-    location,
-    price
+    price,
+    city,
+    distanceUnit,
+    priceUnit,
 }) => {
     return (
         <ResponsiveCard>
@@ -40,19 +33,19 @@ const Card: FC<CardProps> = ({
                 </p>
                 <div className="text-sm text-gray-500 space-y-1 pt-2">
                     <p>
-                        <span role="img" aria-label="Fecha">📅</span> {date}
+                        <span role="img" aria-label="Fecha">📅</span> {new Date(date).toLocaleDateString()}
                     </p>
                     <p>
-                        <span role="img" aria-label="Distancia">🏃‍♂️</span> {distance}
+                        <span role="img" aria-label="Distancia">🏃‍♂️</span> {distance}{distanceUnitsSymbols[distanceUnit]}
                     </p>
-                    {location && (
+                    {city && (
                         <p>
-                            <span role="img" aria-label="Ubicación">📍</span> {location}
+                            <span role="img" aria-label="Ubicación">📍</span> {city}
                         </p>
                     )}
                     {price && (
                         <p className="font-semibold text-blue-600">
-                            <span role="img" aria-label="Precio">💲</span> {price}
+                            <span role="img" aria-label="Precio">{priceUnit} 💲</span>{price}
                         </p>
                     )}
                 </div>
@@ -67,5 +60,4 @@ const Card: FC<CardProps> = ({
     );
 };
 
-export type { CardProps };
 export default Card;

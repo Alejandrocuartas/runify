@@ -14,12 +14,23 @@ const FilterBar: FC<FilterBarProps> = ({ onFilterChange, onClearFilters }) => {
                         onChange={(e) => onFilterChange('type', e.target.value)}
                         className="px-2 py-1.5 border border-gray-200 rounded-lg bg-white text-sm text-gray-800 cursor-pointer transition-all hover:border-blue-600 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 md:w-auto w-full"
                     >
-                        <option value="">Tipo de Evento</option>
-                        <option value="maratón">Maratón</option>
-                        <option value="trail">Trail Run</option>
+
+                        <option value="">Seleccionar Tipo</option>
+                        <option value="short_distance_race">Carrera de corta distancia</option>
+                        <option value="medium_distance_race">Carrera de media distancia</option>
+                        <option value="long_distance_race">Carrera de larga distancia</option>
+                        <option value="trail_race">Carrera de trail</option>
+                        <option value="tematic_or_recreational_race">Carrera tematica o recreativa</option>
+                        <option value="asphalt_race">Carrera en Asfalto</option>
+                        <option value="charity_race_or_race_with_a_cause">Carrera Benefica o con Causa</option>
+                        <option value="obstacle_race">Carrera de Obstaculos</option>
+                        <option value="individual_race">Carrera individual</option>
+                        <option value="team_race">Carrera en Equpos</option>
+                        <option value="race_with_a_theme">Carrera con tema</option>
+                        <option value="other">Otro</option>
                     </select>
 
-                    <select
+                    {/* <select
                         onChange={(e) => onFilterChange('distance', e.target.value)}
                         className="px-2 py-1.5 border border-gray-200 rounded-lg bg-white text-sm text-gray-800 cursor-pointer transition-all hover:border-blue-600 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 md:w-auto w-full"
                     >
@@ -28,10 +39,10 @@ const FilterBar: FC<FilterBarProps> = ({ onFilterChange, onClearFilters }) => {
                         <option value="10km">10K</option>
                         <option value="21km">Media Maratón</option>
                         <option value="42km">Maratón Completa</option>
-                    </select>
+                    </select> */}
 
                     <input
-                        type="date"
+                        type="month"
                         onChange={(e) => onFilterChange('date', e.target.value)}
                         className="px-2 py-1.5 border border-gray-200 rounded-lg bg-white text-sm text-gray-800 cursor-pointer transition-all hover:border-blue-600 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 md:w-[130px] w-full [&::-webkit-calendar-picker-indicator]:scale-75 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                     />

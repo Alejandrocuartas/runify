@@ -1,25 +1,26 @@
-import React, { FC, useEffect } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import Card from '../components/Card';
 // Import CardProps from the Card component file is the best practice:
 // import Card, { CardProps } from '../components/Card';
 import { Link } from 'react-router-dom';
 import { useGlobalState } from '../context';
+import { EventModel, GetRaces, PaginatedResponse } from '../utils/http';
 // Define the structure for a running event item
 interface RunningEvent {
-  id: number;
-  title: string;
-  description: string;
-  imageUrl: string;
-  date: string;
-  distance: string;
+    id: number;
+    title: string;
+    description: string;
+    imageUrl: string;
+    date: string;
+    distance: string;
 }
 
 
 // Define the structure for a feature item - now with direct text
 interface Feature {
-  icon: string;
-  title: string; // Changed from titleKey
-  description: string; // Changed from descriptionKey
+    icon: string;
+    title: string; // Changed from titleKey
+    description: string; // Changed from descriptionKey
 }
 
 // Features data with Spanish text
@@ -43,7 +44,8 @@ const features: Feature[] = [
 
 // Define the Home component using Arrow Function and FC type
 const Home: FC = () => {
-    const { requestLocation } = useGlobalState()
+    const [events, setEvents] = useState<EventModel[]>([]);
+    const { requestLocation, location } = useGlobalState()
     const runningEvents: RunningEvent[] = [
         {
             id: 1,
@@ -74,6 +76,14 @@ const Home: FC = () => {
     useEffect(() => {
         requestLocation()
     }, [requestLocation])
+
+    useEffect(() => {
+        GetRaces({
+            limit: 3,
+            latitude: location?.coordinates[0],
+            longitude: location?.coordinates[1],
+        }).then(r => setEvents(r.data));
+    }, []);
 
     return (
         <div className="space-y-16">
@@ -124,7 +134,7 @@ const Home: FC = () => {
                     Próximos Eventos
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-8">
-                    {runningEvents.map((event: RunningEvent) => (
+                    {events.map((event: EventModel) => (
                         <Card
                             key={event.id}
                             {...event}

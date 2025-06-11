@@ -152,10 +152,6 @@ const AddRace = () => {
         }
     };
 
-
-
-
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -199,9 +195,9 @@ const AddRace = () => {
                 secondaryImages: [],
                 imageUrl: '',
                 price: 0,
-                priceUnit: '',
+                priceUnit: 'COP',
                 distance: 0,
-                distanceUnit: '',
+                distanceUnit: 'kilometers',
                 type: '',
                 dateTime: '',
                 coordinates: [],
@@ -214,15 +210,14 @@ const AddRace = () => {
         }
     };
 
-    const handleChangeLocation = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChangeLocation = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = e.target;
         if (token && value.length > 0) {
-            try {
-                const locations = await SearchLocationsSmart(value, token);
-                setCities(locations);
-            } catch (error) {
-                console.error("Error al buscar ciudades:", error);
-            }
+            SearchLocationsSmart(value, token)
+                .then(setCities)
+                .catch(error => {
+                    console.error("Error al buscar ciudades:", error);
+                });
         } else {
             setCities([]);
         }

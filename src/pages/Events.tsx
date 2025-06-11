@@ -3,6 +3,7 @@ import Card from '../components/Card';
 import FilterBar from '../components/FilterBar';
 import { ResponsiveContainer, ResponsiveGrid } from '../components/Layout';
 import CardSkeleton from '../components/CardSkeleton';
+import { EventModel, PaginatedResponse, GetRaces } from '../utils/http';
 
 interface Event {
     id: number;
@@ -19,40 +20,29 @@ interface Event {
 
 interface Filters {
     type?: string;
-    distance?: string;
-    date?: string;
+    year?: number;
+    month?: number;
 }
 
 interface EventsProps {
     searchQuery?: string;
 }
 
-const Events: FC <EventsProps> = ({ searchQuery = '' }) => {
+const Events: FC<EventsProps> = ({ searchQuery = '' }) => {
     const [filters, setFilters] = useState<Filters>({});
-    const [events, setEvents] = useState<Event[]>([]);
+    const [events, setEvents] = useState<PaginatedResponse<EventModel>>();
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchEvents = async () => {
             setLoading(true);
             try {
-                const response = await fetch('https://jsonplaceholder.typicode.com/posts');
-                const data = await response.json();
-
-                const transformedEvents = data.slice(0, 8).map((post:any) => ({
-                    id: post.id,
-                    title: post.title,
-                    description: post.body,
-                    imageUrl: `https://picsum.photos/800/800?random=${post.id}`,
-                    date: "15 de Marzo, 2024",
-                    distance: "42km",
-                    location: getRandomLocation(),
-                    price: getRandomPrice(),
-                    rating: getRandomRating(),
-                    type: getRandomType()
-                }));
-
-                setEvents(transformedEvents);
+                const response = await GetRaces({
+                    limit: 50,
+                    type: filters.type || '',
+                    year: filters.year || undefined,
+                    month: filters.month || undefined
+                }).then(r => setEvents(r));
             } catch (error) {
                 console.error('Error obteniendo eventos:', error);
             } finally {
@@ -61,52 +51,29 @@ const Events: FC <EventsProps> = ({ searchQuery = '' }) => {
         };
 
         fetchEvents();
-    }, []);
-
-    const getRandomLocation = (): string => {
-        const locations = [
-            "Parque Central, Nueva York",
-            "Golden Gate Park, SF",
-            "Hyde Park, Londres",
-            "Stanley Park, Vancouver",
-            "Centennial Park, Sydney"
-        ];
-        return locations[Math.floor(Math.random() * locations.length)];
-    };
-
-    const getRandomPrice = (): number => {
-        const prices = [29.99, 49.99, 79.99, 99.99, 149.99];
-        return prices[Math.floor(Math.random() * prices.length)];
-    };
-
-    const getRandomRating = (): string => {
-        return (4 + Math.random()).toFixed(2);
-    };
-
-    const getRandomType = (): string => {
-        const types = ["maratón", "media maratón", "10k", "5k", "trail"];
-        return types[Math.floor(Math.random() * types.length)];
-    };
-
-    const handleFilterChange = (filterType: string, value: string) => {
-        setFilters(prev => ({
-            ...prev,
-            [filterType]: value
-        }));
-    };
+    }, [filters]);
 
     const handleClearFilters = () => {
         setFilters({});
     };
 
-    const filteredEvents = events.filter(event => {
-        const matchesQuery = !searchQuery || event.title.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesType = !filters.type || event.type === filters.type;
-        const matchesDistance = !filters.distance || event.distance === filters.distance;
-        const matchesDate = !filters.date || event.date === filters.date;
+    const handleFilterChange = (filterType: string, value: string) => {
 
-        return matchesQuery && matchesType && matchesDistance && matchesDate;
-    });
+        if (filterType === 'date') {
+            const [year, month] = value.split('-');
+            setFilters(prev => ({
+                ...prev,
+                year: parseInt(year),
+                month: parseInt(month)
+            }));
+        } else {
+            setFilters(prev => ({
+                ...prev,
+                [filterType]: value
+            }));
+        }
+    };
+
 
     return (
         <ResponsiveContainer>
@@ -122,7 +89,7 @@ const Events: FC <EventsProps> = ({ searchQuery = '' }) => {
                 {searchQuery && (
                     <div className="text-gray-600 mb-6 py-2.5 px-3 bg-gray-50 rounded-lg">
                         Mostrando resultados para: &quot;{searchQuery}&quot;
-                        ({filteredEvents.length} eventos encontrados)
+                        ({events?.data?.length} eventos encontrados)
                     </div>
                 )}
 
@@ -130,19 +97,12 @@ const Events: FC <EventsProps> = ({ searchQuery = '' }) => {
                     <ResponsiveGrid>
                         {[...Array(6)].map((_, index) => <CardSkeleton key={index} />)}
                     </ResponsiveGrid>
-                ) : filteredEvents.length > 0 ? (
+                ) : events?.data && events?.data?.length > 0 ? (
                     <ResponsiveGrid>
-                        {filteredEvents.map(event => (
+                        {events?.data?.map(event => (
                             <Card
                                 key={event.id}
-                                id={event.id}
-                                title={event.title}
-                                description={event.description}
-                                imageUrl={event.imageUrl}
-                                date={event.date}
-                                distance={event.distance}
-                                location={event.location}
-                                price={typeof event.price === 'number' ? event.price.toString() : event.price}
+                                {...event}
                             />
                         ))}
                     </ResponsiveGrid>
