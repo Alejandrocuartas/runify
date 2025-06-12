@@ -31,17 +31,27 @@ const features: Feature[] = [
 const Home: FC = () => {
     const [events, setEvents] = useState<EventModel[]>([]);
     const { requestLocation, location } = useGlobalState()
+    const [locationRequested, setLocationRequested] = useState(false);
     useEffect(() => {
         requestLocation()
     }, [requestLocation])
 
     useEffect(() => {
+        if (!locationRequested) {
+            requestLocation();
+            setLocationRequested(true);
+        }
+    }, [requestLocation, locationRequested]);
+
+    useEffect(() => {
+        if (!locationRequested) return;
+
         GetRaces({
             limit: 3,
-            latitude: location?.coordinates[0],
-            longitude: location?.coordinates[1],
+            latitude: location?.coordinates.latitude,
+            longitude: location?.coordinates.longitude,
         }).then(r => setEvents(r.data));
-    }, [location?.coordinates]);
+    }, [location?.coordinates, locationRequested]);
 
     return (
         <div className="space-y-16">

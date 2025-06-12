@@ -4,6 +4,7 @@ import FilterBar from '../components/FilterBar';
 import { ResponsiveContainer, ResponsiveGrid } from '../components/Layout';
 import CardSkeleton from '../components/CardSkeleton';
 import { EventModel, PaginatedResponse, GetRaces } from '../utils/http';
+import { useGlobalState } from '../context';
 
 interface Filters {
     type?: string;
@@ -16,11 +17,22 @@ interface EventsProps {
 }
 
 const Events: FC<EventsProps> = ({ searchQuery = '' }) => {
+    const { location, requestLocation } = useGlobalState();
     const [filters, setFilters] = useState<Filters>({});
     const [events, setEvents] = useState<PaginatedResponse<EventModel>>();
     const [loading, setLoading] = useState(true);
+    const [locationRequested, setLocationRequested] = useState(false);
 
     useEffect(() => {
+        if (!locationRequested) {
+            requestLocation();
+            setLocationRequested(true);
+        }
+    }, [requestLocation, locationRequested]);
+
+    useEffect(() => {
+        if (!locationRequested) return;
+
         const fetchEvents = async () => {
             setLoading(true);
             try {
@@ -28,7 +40,9 @@ const Events: FC<EventsProps> = ({ searchQuery = '' }) => {
                     limit: 50,
                     type: filters.type || '',
                     year: filters.year || undefined,
-                    month: filters.month || undefined
+                    month: filters.month || undefined,
+                    latitude: location?.coordinates.latitude || undefined,
+                    longitude: location?.coordinates.longitude || undefined
                 }).then(r => setEvents(r));
             } catch (error) {
                 console.error('Error obteniendo eventos:', error);
@@ -38,7 +52,7 @@ const Events: FC<EventsProps> = ({ searchQuery = '' }) => {
         };
 
         fetchEvents();
-    }, [filters]);
+    }, [filters, location?.coordinates, locationRequested]);
 
     const handleClearFilters = () => {
         setFilters({});
