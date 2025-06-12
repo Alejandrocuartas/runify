@@ -1,11 +1,19 @@
-import { servicesUrl } from "./constants";
+import { runnifyTokenName, servicesUrl } from "./constants";
 
 interface ErrorDetails {
     errors?: { message: string }[];
 }
 
+const handleUnauthorized = () => {
+    alert("Debes iniciar sesión para continuar");
+    localStorage.removeItem(runnifyTokenName);
+    window.location.href = '/login';
+}
 
-const thowError = (error: ErrorDetails, statusText: string) => {
+const thowError = (error: ErrorDetails, statusText: string, status?: number) => {
+    if (status === 401) {
+        handleUnauthorized();
+    }
     throw new Error(error.errors?.[0]?.message || statusText);
 }
 
@@ -75,7 +83,6 @@ const SearchLocationsSmart = async (city: string, token?: string): Promise<Locat
 };
 
 const SearchLocations = async (city: string, token?: string): Promise<Location[]> => {
-
     const headers = {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`
@@ -88,7 +95,7 @@ const SearchLocations = async (city: string, token?: string): Promise<Location[]
 
     if (!response.ok) {
         const errorDetails: ErrorDetails = await response.json();
-        thowError(errorDetails, response.statusText);
+        thowError(errorDetails, response.statusText, response.status);
     }
 
     return response.json();
@@ -124,13 +131,11 @@ const CreateRace = async (data: CreateRaceRequest, token?: string): Promise<any>
 
     if (!response.ok) {
         const errorDetails: ErrorDetails = await response.json();
-        thowError(errorDetails, response.statusText);
+        thowError(errorDetails, response.statusText, response.status);
     }
 
     return response.json();
 };
-
-
 
 interface GenerateUploadUrlRequest {
     fileName: string;
@@ -150,6 +155,7 @@ interface ConfirmUploadRequest {
 
 const UploadFileToServer = async (file: File, jwt: string | null): Promise<any> => {
     if (!jwt) {
+        handleUnauthorized();
         throw new Error("No token provided");
     }
 
@@ -166,6 +172,9 @@ const UploadFileToServer = async (file: File, jwt: string | null): Promise<any> 
 
     if (!presignResponse.ok) {
         const errorData = await presignResponse.json().catch(() => ({ message: 'Error desconocido al generar URL' }));
+        if (presignResponse.status === 401) {
+            handleUnauthorized();
+        }
         throw new Error(errorData.message || `Error al generar URL para ${fileName}`);
     }
     const { uploadUrl, s3Key }: GenerateUploadUrlResponse = await presignResponse.json();
@@ -178,6 +187,9 @@ const UploadFileToServer = async (file: File, jwt: string | null): Promise<any> 
     });
 
     if (!s3UploadResponse.ok) {
+        if (s3UploadResponse.status === 401) {
+            handleUnauthorized();
+        }
         throw new Error(`Error al subir ${fileName} a S3 (status: ${s3UploadResponse.status})`);
     }
 
@@ -191,6 +203,9 @@ const UploadFileToServer = async (file: File, jwt: string | null): Promise<any> 
 
     if (!confirmResponse.ok) {
         const errorData = await confirmResponse.json().catch(() => ({ message: 'Error desconocido al confirmar subida' }));
+        if (confirmResponse.status === 401) {
+            handleUnauthorized();
+        }
         throw new Error(errorData.message || `Error al confirmar subida para ${fileName}`);
     }
 
@@ -243,6 +258,9 @@ export interface EventModel {
     };
     city: string;
     amenities?: string[];
+
+    // calculated fields
+    organizer?: string;
 }
 
 export interface PaginatedResponse<T> {

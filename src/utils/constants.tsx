@@ -10,4 +10,19 @@ const distanceUnitsSymbols = {
     feet: "FT",
 }
 
-export { servicesUrl, runnifyTokenName, distanceUnitsSymbols };
+const eventTypes = {
+    short_distance_race: "Carrera de corta distancia",
+    medium_distance_race: "Carrera de media distancia",
+    long_distance_race: "Carrera de larga distancia",
+    trail_race: "Carrera de trail",
+    tematic_or_recreational_race: "Carrera tematica o recreativa",
+    asphalt_race: "Carrera en Asfalto",
+    charity_race_or_race_with_a_cause: "Carrera Benefica o con Causa",
+    obstacle_race: "Carrera de Obstaculos",
+    individual_race: "Carrera individual",
+    team_race: "Carrera en Equpos",
+    race_with_a_theme: "Carrera con tema",
+    other: "Otro",
+}
+
+export { servicesUrl, runnifyTokenName, distanceUnitsSymbols, eventTypes };

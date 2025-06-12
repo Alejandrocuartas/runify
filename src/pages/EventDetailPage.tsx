@@ -1,64 +1,30 @@
 import React, { FC, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ResponsiveContainer } from '../components/Layout'; // Assuming Layout.tsx is in src/components
-
-// Placeholder for what event data might look like (similar to what's in Card.tsx or Events.tsx)
-interface EventDetails {
-    id: string;
-    title: string;
-    description: string;
-    imageUrl: string;
-    date: string; // Could be more structured, e.g., Date object or specific string format
-    startTime?: string;
-    location?: string;
-    distance?: string;
-    price?: string | number;
-    amenities?: string[];
-    organizer?: string;
-    // Add other fields as necessary
-}
+import { EventModel, GetRaces } from '../utils/http';
+import { distanceUnitsSymbols, eventTypes } from '../utils/constants';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 
 const EventDetailPage: FC = () => {
     const { eventId } = useParams<{ eventId: string }>();
-    const [event, setEvent] = useState<EventDetails | null>(null);
+    const [event, setEvent] = useState<EventModel | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (!eventId) return;
 
-        // Simulate fetching event data
         const fetchEventDetails = async () => {
             setLoading(true);
-            setError(null);
             try {
-                // In a real app, you would fetch this from your API:
-                // const response = await fetch(`/api/events/${eventId}`);
-                // if (!response.ok) throw new Error('Evento no encontrado');
-                // const data = await response.json();
-                // setEvent(data);
-
-                // Simulated data for now:
-                console.log(`Fetching details for event: ${eventId}`);
-                await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
-
-                const mockEvent: EventDetails = {
-                    id: eventId,
-                    title: `Detalles del Evento ${eventId}`,
-                    description: `Esta es una descripción detallada para el evento ${eventId}. Cubre todos los aspectos importantes y anima a la gente a participar. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.`,
-                    imageUrl: `https://picsum.photos/seed/${eventId}/1200/400`,
-                    date: "25 de Diciembre, 2024",
-                    startTime: "09:00 AM",
-                    location: "Parque Metropolitano, Ciudad Ejemplo",
-                    distance: "10km",
-                    price: "Gratis",
-                    amenities: ["Estaciones de hidratación", "Servicio médico", "Guardarropa", "Medalla de finalista"],
-                    organizer: "Grandes Eventos S.A."
-                };
-                setEvent(mockEvent);
-            } catch (err) {
-                setError(err instanceof Error ? err.message : 'Ocurrió un error al cargar el evento.');
-                console.error("Error fetching event details:", err);
+                await GetRaces({
+                    limit: 1,
+                    id: parseInt(eventId)
+                }).then(r => setEvent(r.data[0]));
+            } catch (error) {
+                setError(error instanceof Error ? error.message : 'Ocurrió un error al cargar el evento.');
+                console.error('Error obteniendo evento:', error);
             } finally {
                 setLoading(false);
             }
@@ -95,8 +61,8 @@ const EventDetailPage: FC = () => {
         <ResponsiveContainer className="py-8 md:py-12">
             {/* Hero Image */}
             <div className="mb-8 md:mb-12">
-                <img 
-                    src={event.imageUrl} 
+                <img
+                    src={event.imageUrl}
                     alt={`Imagen de ${event.title}`}
                     className="w-full h-64 md:h-96 object-cover rounded-xl shadow-lg"
                 />
@@ -107,11 +73,12 @@ const EventDetailPage: FC = () => {
                 {/* Left Column (Main Content) */}
                 <div className="lg:col-span-2 space-y-6">
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900">{event.title}</h1>
-                    
+
                     <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-gray-600">
-                        <p><span role="img" aria-label="Fecha">📅</span> {event.date} {event.startTime && `- ${event.startTime}`}</p>
-                        {event.location && <p><span role="img" aria-label="Ubicación">📍</span> {event.location}</p>}
-                        {event.distance && <p><span role="img" aria-label="Distancia">🏃</span> {event.distance}</p>}
+                        <p><span role="img" aria-label="Fecha">📅</span> {new Date(event.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })} - {new Date(event.date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</p>
+                        {event.location && <p><span role="img" aria-label="Ubicación">📍</span> {event.city}</p>}
+                        {event.distance && <p><span role="img" aria-label="Distancia">🏃</span> {event.distance}{distanceUnitsSymbols[event.distanceUnit]}</p>}
+                        {event.type && <p><span role="img" aria-label="Tipo">🏃</span> {eventTypes[event.type]}</p>}
                     </div>
 
                     <div className="prose prose-lg max-w-none text-gray-700">
@@ -138,14 +105,14 @@ const EventDetailPage: FC = () => {
                         <div className="space-y-3">
                             {event.price && (
                                 <p className="text-lg">
-                                    <span className="font-medium text-gray-700">Precio: </span> 
-                                    <span className="text-blue-600 font-semibold">{typeof event.price === 'number' ? `$${event.price.toLocaleString('es-CO')}` : event.price}</span>
+                                    <span className="font-medium text-gray-700">Precio: </span>
+                                    <span className="text-blue-600 font-semibold">{event.priceUnit} ${event.price.toLocaleString('es-CO')}</span>
                                 </p>
                             )}
                             {/* Could add organizer, max participants etc. here */}
                             {event.organizer && (
                                 <p className="text-sm">
-                                    <span className="font-medium text-gray-700">Organizador: </span> 
+                                    <span className="font-medium text-gray-700">Organizador: </span>
                                     {event.organizer}
                                 </p>
                             )}
@@ -157,13 +124,28 @@ const EventDetailPage: FC = () => {
                             </Link>
                         </div>
                     </div>
-                    
-                    {/* Placeholder for a map */}
+
+                    {/* Mapa de ubicación */}
                     {event.location && (
                         <div className="bg-gray-50 p-6 rounded-xl shadow">
                             <h2 className="text-xl font-semibold text-gray-800 mb-3">Ubicación</h2>
-                            <div className="w-full h-64 bg-gray-300 rounded-lg flex items-center justify-center text-gray-500">
-                                Placeholder del Mapa para: {event.location}
+                            <div className="w-full h-64 rounded-lg overflow-hidden">
+                                <MapContainer
+                                    center={[event.location.coordinates[1], event.location.coordinates[0]]}
+                                    zoom={15}
+                                    scrollWheelZoom={false}
+                                    style={{ height: '100%', width: '100%' }}
+                                >
+                                    <TileLayer
+                                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                    />
+                                    <Marker position={[event.location.coordinates[1], event.location.coordinates[0]]}>
+                                        <Popup>
+                                            {event.city}<br />{event.title}
+                                        </Popup>
+                                    </Marker>
+                                </MapContainer>
                             </div>
                         </div>
                     )}
