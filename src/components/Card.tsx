@@ -33,7 +33,7 @@ const Card: FC<EventModel> = ({
                 </p>
                 <div className="text-sm text-gray-500 space-y-1 pt-2">
                     <p>
-                        <span role="img" aria-label="Fecha">📅</span> {new Date(date).toLocaleDateString()}
+                        <span role="img" aria-label="Fecha">📅</span> {new Date(date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })} - {new Date(date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                     <p>
                         <span role="img" aria-label="Distancia">🏃‍♂️</span> {distance}{distanceUnitsSymbols[distanceUnit]}

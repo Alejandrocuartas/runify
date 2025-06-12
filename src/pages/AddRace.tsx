@@ -3,6 +3,7 @@ import { CreateRace, CreateRaceRequest, SearchLocationsSmart, UploadFileToServer
 import { runnifyTokenName } from '../utils/constants';
 import { useGlobalState } from '../context';
 import TagInput from '../components/TagInput';
+import { Location } from '../utils/types';
 
 interface EventFile {
     fileName: string;
@@ -34,10 +35,6 @@ interface EventData {
     image?: EventFile;
 }
 
-interface Location {
-    name: string;
-    coordinates: number[];
-}
 
 const combineDateTime = (dateStr: string, timeStr: string): string => {
     const date = new Date(`${dateStr}T${timeStr}:00Z`);

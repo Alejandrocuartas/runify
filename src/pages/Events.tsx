@@ -10,6 +10,8 @@ interface Filters {
     type?: string;
     year?: number;
     month?: number;
+    city?: string;
+    coordinates?: number[];
 }
 
 interface EventsProps {
@@ -35,14 +37,24 @@ const Events: FC<EventsProps> = ({ searchQuery = '' }) => {
 
         const fetchEvents = async () => {
             setLoading(true);
+
+            let coordinates: { latitude: number, longitude: number } | undefined = location?.coordinates;
+
+            if (filters.city && filters.coordinates) {
+                coordinates = {
+                    latitude: filters.coordinates[1],
+                    longitude: filters.coordinates[0]
+                };
+            }
+
             try {
                 await GetRaces({
                     limit: 50,
                     type: filters.type || '',
                     year: filters.year || undefined,
                     month: filters.month || undefined,
-                    latitude: location?.coordinates.latitude || undefined,
-                    longitude: location?.coordinates.longitude || undefined
+                    latitude: coordinates?.latitude || undefined,
+                    longitude: coordinates?.longitude || undefined
                 }).then(r => setEvents(r));
             } catch (error) {
                 console.error('Error obteniendo eventos:', error);
@@ -58,7 +70,7 @@ const Events: FC<EventsProps> = ({ searchQuery = '' }) => {
         setFilters({});
     };
 
-    const handleFilterChange = (filterType: string, value: string) => {
+    const handleFilterChange = (filterType: string, value: string, coordinates?: number[]) => {
 
         if (filterType === 'date') {
             const [year, month] = value.split('-');
@@ -66,6 +78,12 @@ const Events: FC<EventsProps> = ({ searchQuery = '' }) => {
                 ...prev,
                 year: parseInt(year),
                 month: parseInt(month)
+            }));
+        } else if (filterType === 'city') {
+            setFilters(prev => ({
+                ...prev,
+                city: value,
+                coordinates: coordinates || []
             }));
         } else {
             setFilters(prev => ({
