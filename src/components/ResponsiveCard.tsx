@@ -3,11 +3,12 @@ import React, { FC, ReactNode } from 'react';
 
 interface ResponsiveCardProps {
     children: ReactNode;
+    className?: string;
 }
 
-const ResponsiveCard: FC<ResponsiveCardProps> = ({ children }) => {
+const ResponsiveCard: FC<ResponsiveCardProps> = ({ children, className = '' }) => {
     return (
-        <div className="tu-clase-tailwind-para-responsive-card"> {/* Reemplaza con tus clases de Tailwind */}
+        <div className={`bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden ${className}`}>
             {children}
         </div>
     );

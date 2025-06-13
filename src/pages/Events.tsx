@@ -71,7 +71,6 @@ const Events: FC<EventsProps> = ({ searchQuery = '' }) => {
     };
 
     const handleFilterChange = (filterType: string, value: string, coordinates?: number[]) => {
-
         if (filterType === 'date') {
             const [year, month] = value.split('-');
             setFilters(prev => ({
@@ -93,7 +92,6 @@ const Events: FC<EventsProps> = ({ searchQuery = '' }) => {
         }
     };
 
-
     return (
         <ResponsiveContainer>
             <FilterBar
@@ -101,9 +99,9 @@ const Events: FC<EventsProps> = ({ searchQuery = '' }) => {
                 onClearFilters={handleClearFilters}
             />
 
-            <div className="section">
-                <h1 className="text-4xl font-bold text-gray-900 mt-6 mb-2">Eventos de Running</h1>
-                <p className="text-lg text-gray-600 mb-4">Encuentra las mejores carreras cerca de ti.</p>
+            <div className="px-4 md:px-6 lg:px-8 py-6 md:py-8">
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Eventos de Running</h1>
+                <p className="text-base md:text-lg text-gray-600 mb-6">Encuentra las mejores carreras cerca de ti.</p>
 
                 {searchQuery && (
                     <div className="text-gray-600 mb-6 py-2.5 px-3 bg-gray-50 rounded-lg">
@@ -113,18 +111,18 @@ const Events: FC<EventsProps> = ({ searchQuery = '' }) => {
                 )}
 
                 {loading ? (
-                    <ResponsiveGrid>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                         {[...Array(6)].map((_, index) => <CardSkeleton key={index} />)}
-                    </ResponsiveGrid>
+                    </div>
                 ) : events?.data && events?.data?.length > 0 ? (
-                    <ResponsiveGrid>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                         {events?.data?.map(event => (
                             <Card
                                 key={event.id}
                                 {...event}
                             />
                         ))}
-                    </ResponsiveGrid>
+                    </div>
                 ) : (
                     <div className="text-center py-10 text-gray-600 bg-gray-50 rounded-lg">
                         <p>No se encontraron eventos que coincidan con tu búsqueda o filtros.</p>

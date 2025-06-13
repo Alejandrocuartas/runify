@@ -41,7 +41,6 @@ const FilterBar: FC<FilterBarProps> = ({ onFilterChange, onClearFilters }) => {
                         onChange={(e) => onFilterChange('type', e.target.value)}
                         className="px-2 py-1.5 border border-gray-200 rounded-lg bg-white text-sm text-gray-800 cursor-pointer transition-all hover:border-blue-600 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 md:w-auto w-full"
                     >
-
                         <option value="">Seleccionar Tipo</option>
                         <option value="short_distance_race">Carrera de corta distancia</option>
                         <option value="medium_distance_race">Carrera de media distancia</option>
@@ -74,29 +73,31 @@ const FilterBar: FC<FilterBarProps> = ({ onFilterChange, onClearFilters }) => {
                         className="px-2 py-1.5 border border-gray-200 rounded-lg bg-white text-sm text-gray-800 cursor-pointer transition-all hover:border-blue-600 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 md:w-[130px] w-full [&::-webkit-calendar-picker-indicator]:scale-75 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                     />
 
-                    <input
-                        type="text"
-                        name="city"
-                        onChange={handleChangeLocation}
-                        onFocus={() => setShowDropdown(true)}
-                        className="px-2 py-1.5 border border-gray-200 rounded-lg bg-white text-sm text-gray-800 cursor-pointer transition-all hover:border-blue-600 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 md:w-[130px] w-full [&::-webkit-calendar-picker-indicator]:scale-75 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                        placeholder="Buscar ciudad..."
-                        required
-                    />
-                    {showDropdown && cities.length > 0 && (
-                        <ul className="px-2 py-1.5 border border-gray-200 rounded-lg bg-white text-sm text-gray-800 cursor-pointer transition-all hover:border-blue-600 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 md:w-[130px] w-full [&::-webkit-calendar-picker-indicator]:scale-75 [&::-webkit-calendar-picker-indicator]:cursor-pointer">
-                            {cities.map((city) => (
-                                <li
-                                    key={city.name}
-                                    onClick={() => handleSelectCity(city)}
-                                    className=""
-                                >
-                                    {city.name}
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-
+                    {/* Contenedor relativo para el input y el dropdown */}
+                    <div className="relative md:w-[130px] w-full">
+                        <input
+                            type="text"
+                            name="city"
+                            onChange={handleChangeLocation}
+                            onFocus={() => setShowDropdown(true)}
+                            className="px-2 py-1.5 border border-gray-200 rounded-lg bg-white text-sm text-gray-800 cursor-pointer transition-all hover:border-blue-600 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 w-full"
+                            placeholder="Buscar ciudad..."
+                            required
+                        />
+                        {showDropdown && cities.length > 0 && (
+                            <ul className="absolute left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                                {cities.map((city) => (
+                                    <li
+                                        key={city.name}
+                                        onClick={() => handleSelectCity(city)}
+                                        className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-gray-800"
+                                    >
+                                        {city.name}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
                 </div>
 
                 <button

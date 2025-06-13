@@ -18,42 +18,51 @@ const Card: FC<EventModel> = ({
 }) => {
     return (
         <ResponsiveCard>
-            <img
-                src={imageUrl}
-                alt={title}
-                className="w-full h-48 object-cover rounded-t-lg"
-                loading="lazy"
-            />
-            <div className="p-4 flex flex-col space-y-2">
-                <h2 className="text-lg font-semibold line-clamp-2" title={title}>
+            <div className="relative">
+                <img
+                    src={imageUrl}
+                    alt={title}
+                    className="w-full h-48 md:h-56 object-cover"
+                    loading="lazy"
+                />
+            </div>
+            <div className="p-4 md:p-5 flex flex-col space-y-3">
+                <h2 className="text-lg font-semibold line-clamp-2 text-gray-900" title={title}>
                     {title}
                 </h2>
                 <p className="text-sm text-gray-600 line-clamp-3 flex-grow" title={description}>
                     {description}
                 </p>
-                <div className="text-sm text-gray-500 space-y-1 pt-2">
-                    <p>
-                        <span role="img" aria-label="Fecha">📅</span> {new Date(date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })} - {new Date(date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                <div className="text-sm text-gray-500 space-y-2 pt-2">
+                    <p className="flex items-center gap-2">
+                        <span role="img" aria-label="Fecha">📅</span>
+                        <span>{new Date(date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                     </p>
-                    <p>
-                        <span role="img" aria-label="Distancia">🏃‍♂️</span> {distance}{distanceUnitsSymbols[distanceUnit]}
+                    <p className="flex items-center gap-2">
+                        <span role="img" aria-label="Distancia">🏃‍♂️</span>
+                        <span>{distance}{distanceUnitsSymbols[distanceUnit]}</span>
                     </p>
                     {city && (
-                        <p>
-                            <span role="img" aria-label="Ubicación">📍</span> {city}
+                        <p className="flex items-center gap-2">
+                            <span role="img" aria-label="Ubicación">📍</span>
+                            <span>{city}</span>
                         </p>
                     )}
                     {price && (
-                        <p className="font-semibold text-blue-600">
-                            <span role="img" aria-label="Precio">{priceUnit} 💲</span>{price}
+                        <p className="flex items-center gap-2 font-semibold text-blue-600">
+                            <span role="img" aria-label="Precio">{priceUnit} 💲</span>
+                            <span>{price}</span>
                         </p>
                     )}
                 </div>
                 <Link
                     to={`/events/${id}`}
-                    className="inline-block text-blue-600 hover:text-blue-700 hover:underline pt-2 self-start"
+                    className="inline-flex items-center text-blue-600 hover:text-blue-700 hover:underline pt-2 self-start"
                 >
-                    Ver Detalles →
+                    Ver Detalles
+                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
                 </Link>
             </div>
         </ResponsiveCard>

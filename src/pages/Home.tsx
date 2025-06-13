@@ -55,29 +55,29 @@ const Home: FC = () => {
 
     return (
         <div className="space-y-16">
-            <div className="relative h-[60vh] md:h-[75vh] lg:h-[80vh] flex items-center rounded-[2.5rem] overflow-hidden">
+            <div className="relative flex items-center justify-center min-h-[35vh] md:min-h-[45vh] lg:min-h-[55vh] px-4 sm:px-0">
                 <div
                     className="absolute inset-0 bg-cover bg-center"
                     style={{ backgroundImage: "url('https://images.unsplash.com/photo-1552674605-db6ffd4facb5?q=80')" }}
                     aria-hidden="true"
                 >
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-500/90 to-blue-600/90"></div>
-
                 </div>
-                <div className="max-w-[1200px] mx-auto px-5 relative z-10 text-white">
-                    <h1 className="text-4xl md:text-[3.5rem] font-bold mb-6 leading-tight">
+                <div className="w-full max-w-xl mx-auto relative z-10 text-white flex flex-col items-center text-center py-6 md:py-0">
+                    <h1 className="text-3xl sm:text-4xl md:text-[3.5rem] font-bold mb-5 leading-tight drop-shadow-lg">
                         Encuentra Tu Próxima Carrera
                     </h1>
-                    <p className="text-xl md:text-2xl opacity-90 mb-8 max-w-2xl">
+                    <p className="text-base sm:text-xl md:text-2xl opacity-90 mb-8 max-w-xl drop-shadow">
                         Explora eventos de running cerca de ti. Inscríbete fácilmente y únete a la comunidad.
                     </p>
                     <Link
                         to="/events"
-                        className="bg-white text-blue-600 px-8 py-3 rounded-lg hover:bg-gray-100 transition duration-300 inline-block"
+                        className="bg-white text-blue-600 px-8 py-3 rounded-lg hover:bg-gray-100 transition duration-300 w-full sm:w-auto font-semibold text-base shadow-md"
                     >
                         Explorar Eventos
                     </Link>
                 </div>
+                <div className="absolute inset-0 pointer-events-none rounded-none lg:rounded-[2.5rem] overflow-hidden"></div>
             </div>
 
             <div className="max-w-[1200px] mx-auto px-5">
