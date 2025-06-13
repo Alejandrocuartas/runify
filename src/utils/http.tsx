@@ -66,12 +66,11 @@ interface Location {
  * para entradas muy cortas.
  *
  * @param city El nombre de la ciudad a buscar.
- * @param token Token de autenticación opcional.
  * @returns Una promesa que se resuelve con un array de ubicaciones.
  *          Si el término de búsqueda es demasiado corto, se resuelve con un array vacío
  *          sin realizar una llamada a la API.
  */
-const SearchLocationsSmart = async (city: string, token?: string): Promise<Location[]> => {
+const SearchLocationsSmart = async (city: string): Promise<Location[]> => {
     if (!city || city.trim().length < 0) {
         // La consulta es demasiado corta, devuelve un array vacío inmediatamente.
         // Esto evita una llamada innecesaria a la API.
@@ -79,13 +78,12 @@ const SearchLocationsSmart = async (city: string, token?: string): Promise<Locat
     }
     // Si la consulta es lo suficientemente larga, procede con la llamada a la API
     // utilizando la función original SearchLocations.
-    return SearchLocations(city, token);
+    return SearchLocations(city);
 };
 
-const SearchLocations = async (city: string, token?: string): Promise<Location[]> => {
+const SearchLocations = async (city: string): Promise<Location[]> => {
     const headers = {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
     };
 
     const response = await fetch(servicesUrl + `/api/v1/locations?name=${city}`, {

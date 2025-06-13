@@ -209,8 +209,8 @@ const AddRace = () => {
 
     const handleChangeLocation = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = e.target;
-        if (token && value.length > 0) {
-            SearchLocationsSmart(value, token)
+        if (value.length > 0) {
+            SearchLocationsSmart(value)
                 .then(setCities)
                 .catch(error => {
                     console.error("Error al buscar ciudades:", error);

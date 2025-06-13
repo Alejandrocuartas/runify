@@ -1,7 +1,7 @@
 import React, { useState, useEffect, FC } from 'react';
 import Card from '../components/Card';
 import FilterBar from '../components/FilterBar';
-import { ResponsiveContainer, ResponsiveGrid } from '../components/Layout';
+import { ResponsiveContainer } from '../components/Layout';
 import CardSkeleton from '../components/CardSkeleton';
 import { EventModel, PaginatedResponse, GetRaces } from '../utils/http';
 import { useGlobalState } from '../context';
