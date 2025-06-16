@@ -64,7 +64,7 @@ const Home: FC = () => {
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-500/90 to-blue-600/90"></div>
                 </div>
                 <div className="w-full max-w-xl mx-auto relative z-10 text-white flex flex-col items-center text-center py-6 md:py-0">
-                    <h1 className="text-3xl sm:text-4xl md:text-[3.5rem] font-bold mb-5 leading-tight drop-shadow-lg">
+                    <h1 className="text-3xl sm:text-4xl md:text-[3.5rem] font-bold mb-5 leading-tight md:leading-[1.1] drop-shadow-lg">
                         Encuentra Tu Próxima Carrera
                     </h1>
                     <p className="text-base sm:text-xl md:text-2xl opacity-90 mb-8 max-w-xl drop-shadow">
