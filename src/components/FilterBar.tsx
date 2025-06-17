@@ -1,7 +1,6 @@
 import React, { FC, useState } from 'react';
 import { Location } from '../utils/types';
 import { SearchLocationsSmart } from '../utils/http';
-import { useGlobalState } from '../context';
 
 interface FilterBarProps {
     onFilterChange: (filterType: string, value: string, coordinates?: number[]) => void;
@@ -11,18 +10,30 @@ interface FilterBarProps {
 const FilterBar: FC<FilterBarProps> = ({ onFilterChange, onClearFilters }) => {
     const [showDropdown, setShowDropdown] = useState(false);
     const [cities, setCities] = useState<Location[]>([]);
-    const { token } = useGlobalState();
+    const [city, setCity] = useState('');
 
     const handleSelectCity = (city: Location) => {
         onFilterChange('city', city.name, city.coordinates);
         setShowDropdown(false);
+        setCity(city.name);
         setCities([]);
     };
 
+    const localOnClearFilters = () => {
+        onClearFilters();
+        setCity('');
+        setCities([]);
+        const typeFilter = document.getElementById('type_filter') as HTMLSelectElement;
+        const dateFilter = document.getElementById('date_filter') as HTMLInputElement;
+        typeFilter.value = '';
+        dateFilter.value = '';
+    };
+
     const handleChangeLocation = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setCity(e.target.value);
         const { value } = e.target;
-        if (token && value.length > 0) {
-            SearchLocationsSmart(value, token)
+        if (value.length > 0) {
+            SearchLocationsSmart(value)
                 .then(setCities)
                 .catch(error => {
                     console.error("Error al buscar ciudades:", error);
@@ -38,6 +49,7 @@ const FilterBar: FC<FilterBarProps> = ({ onFilterChange, onClearFilters }) => {
             <div className="max-w-[1200px] mx-auto px-5 flex justify-between items-center md:flex-row flex-col gap-2">
                 <div className="flex gap-3 flex-wrap md:flex-row flex-col w-full">
                     <select
+                        id='type_filter'
                         onChange={(e) => onFilterChange('type', e.target.value)}
                         className="px-2 py-1.5 border border-gray-200 rounded-lg bg-white text-sm text-gray-800 cursor-pointer transition-all hover:border-blue-600 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 md:w-auto w-full"
                     >
@@ -69,6 +81,7 @@ const FilterBar: FC<FilterBarProps> = ({ onFilterChange, onClearFilters }) => {
 
                     <input
                         type="month"
+                        id='date_filter'
                         onChange={(e) => onFilterChange('date', e.target.value)}
                         className="px-2 py-1.5 border border-gray-200 rounded-lg bg-white text-sm text-gray-800 cursor-pointer transition-all hover:border-blue-600 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 md:w-[130px] w-full [&::-webkit-calendar-picker-indicator]:scale-75 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                     />
@@ -77,6 +90,7 @@ const FilterBar: FC<FilterBarProps> = ({ onFilterChange, onClearFilters }) => {
                     <div className="relative md:w-[130px] w-full">
                         <input
                             type="text"
+                            value={city}
                             name="city"
                             onChange={handleChangeLocation}
                             onFocus={() => setShowDropdown(true)}
@@ -101,7 +115,7 @@ const FilterBar: FC<FilterBarProps> = ({ onFilterChange, onClearFilters }) => {
                 </div>
 
                 <button
-                    onClick={onClearFilters}
+                    onClick={localOnClearFilters}
                     className="px-3 py-1.5 border border-gray-200 rounded-lg bg-transparent text-gray-600 text-sm cursor-pointer transition-all hover:bg-gray-100 hover:text-blue-600 hover:border-blue-600 md:w-auto w-full"
                 >
                     Limpiar Filtros
