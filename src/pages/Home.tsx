@@ -50,7 +50,7 @@ const Home: FC = () => {
             limit: 3,
             latitude: location?.coordinates.latitude,
             longitude: location?.coordinates.longitude,
-        }).then(r => setEvents(r.data));
+        }).then(r => setEvents(r.data)).catch(e => console.error(e));
     }, [location?.coordinates, locationRequested]);
 
     return (

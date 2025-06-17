@@ -33,6 +33,10 @@ interface EventData {
     secondaryImages?: EventFile[];
     // image uploaded to s3 and its url is stored in imageUrl
     image?: EventFile;
+
+    includeTshirt: boolean;
+    tshirtPrice: number;
+    termsUrl?: string;
 }
 
 
@@ -61,6 +65,9 @@ const AddRace = () => {
         type: '',
         dateTime: '',
         coordinates: [],
+        includeTshirt: false,
+        tshirtPrice: 0,
+        termsUrl: '',
     });
 
     const { token } = useGlobalState();
@@ -74,6 +81,13 @@ const AddRace = () => {
         setEventData(prev => ({
             ...prev,
             [name]: newValue
+        }));
+    };
+
+    const handleIncludeTshirtChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setEventData(prev => ({
+            ...prev,
+            includeTshirt: e.target.checked
         }));
     };
 
@@ -149,6 +163,25 @@ const AddRace = () => {
         }
     };
 
+    const handleTermsUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files ? e.target.files[0] : null;
+        if (file) {
+            setLoading(true);
+            try {
+                console.log("Subiendo terminos y condiciones...");
+                const uploadedFile = await UploadFileToServer(file, token);
+                setEventData(prev => ({ ...prev, termsUrl: uploadedFile.fileUrl }));
+                console.log("Terminos y condiciones subidos:", uploadedFile);
+            } catch (error) {
+                console.error("Error al subir terminos y condiciones:", error);
+                alert(`Error al subir terminos y condiciones: ${error instanceof Error ? error.message : "Error desconocido"}`);
+                e.target.value = '';
+            } finally {
+                setLoading(false);
+            }
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -174,6 +207,9 @@ const AddRace = () => {
             city: eventData.city,
             amenities: eventData.amenities,
             files: eventData.secondaryImagesUrls,
+            includeTshirt: eventData.includeTshirt,
+            tshirtPrice: eventData.tshirtPrice,
+            termsUrl: eventData.termsUrl,
         };
 
         try {
@@ -198,6 +234,9 @@ const AddRace = () => {
                 type: '',
                 dateTime: '',
                 coordinates: [],
+                includeTshirt: false,
+                tshirtPrice: 0,
+                termsUrl: '',
             });
         } catch (error) {
             console.error("Error en el proceso de creación del evento:", error);
@@ -305,6 +344,24 @@ const AddRace = () => {
                             </div>
                         )}
                     </div>
+
+                    <div>
+                        <label className="block mb-2">Términos y condiciones (PDF)</label>
+                        <input
+                            type="file"
+                            name="termsUrl"
+                            accept=".pdf"
+                            onChange={handleTermsUpload}
+                            className="w-full p-2 border rounded"
+                        />
+                        {eventData.termsUrl && (
+                            <div className="mt-2">
+                                <a href={eventData.termsUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                    Ver PDF cargado
+                                </a>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <div className="space-y-4">
@@ -383,6 +440,26 @@ const AddRace = () => {
                                 <option value="EUR">EUR</option>
                             </select>
                         </div>
+                        <div>
+                            <label className="block mb-2">Opción con camiseta</label>
+                            <input
+                                type="checkbox"
+                                name="includeTshirt"
+                                checked={eventData.includeTshirt}
+                                onChange={handleIncludeTshirtChange}
+                                className="w-full p-2 border rounded"
+                            />
+                        </div>
+                        {eventData.includeTshirt && <div>
+                            <label className="block mb-2">Precio de la camiseta (Será agregado al precio de la carrera cuando el usuario se inscriba)</label>
+                            <input
+                                type="number"
+                                name="tshirtPrice"
+                                onChange={handleChange}
+                                className="w-full border rounded p-2"
+                                required={eventData.includeTshirt}
+                            />
+                        </div>}
                         <div>
                             <label className="block mb-2">Tipo</label>
                             <select

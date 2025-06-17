@@ -113,6 +113,9 @@ export interface CreateRaceRequest {
     coordinates: [number, number];
     city: string;
     amenities?: string[];
+    includeTshirt: boolean;
+    tshirtPrice: number;
+    termsUrl?: string;
 }
 
 const CreateRace = async (data: CreateRaceRequest, token?: string): Promise<any> => {
@@ -256,7 +259,9 @@ export interface EventModel {
     };
     city: string;
     amenities?: string[];
-
+    termsUrl?: string;
+    includeTshirt: boolean;
+    tshirtPrice: number;
     // calculated fields
     organizer?: string;
 }
@@ -286,6 +291,47 @@ const GetRaces = async (filters?: GetEventsRequestFilters): Promise<PaginatedRes
     return response.json();
 }
 
+export interface RegistrationRequest {
+    documentType: 'CC' | 'TI' | 'NIT' | 'Pasaporte';
+    documentNumber: string;
+    documentCountry: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    birthDate: string;
+    wantsTshirt: boolean;
+    tshirtSize: 'S' | 'M' | 'L' | 'XL' | '';
+    healthService: string;
+    bloodType: 'A+' | 'A−' | 'B+' | 'B−' | 'AB+' | 'AB−' | 'O+' | 'O−' | '';
+    country: string;
+    department: string;
+    city: string;
+    emergencyContactName: string;
+    emergencyContactPhone: string;
+    agreeToTerms: boolean;
+    eventId: number;
+}
+
+const CreateRaceRegistration = async (data: RegistrationRequest): Promise<any> => {
+    const headers = {
+        "Content-Type": "application/json"
+    };
+
+    const response = await fetch(servicesUrl + "/api/v1/registrations", {
+        method: "POST",
+        headers,
+        body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+        const errorDetails: ErrorDetails = await response.json();
+        thowError(errorDetails, response.statusText);
+    }
+
+    return response.json();
+}
+
 export {
     SignUp,
     SignIn,
@@ -294,4 +340,5 @@ export {
     UploadFileToServer,
     SearchLocationsSmart,
     GetRaces,
+    CreateRaceRegistration,
 };

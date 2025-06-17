@@ -1,59 +1,34 @@
 import React, { FC, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ResponsiveContainer } from '../components/Layout';
+import { CreateRaceRegistration, GetRaces, RegistrationRequest } from '../utils/http';
 
-interface RegistrationFormData {
-    documentType: 'CC' | 'TI' | 'NIT' | 'Pasaporte' | '';
-    documentNumber: string;
-    documentCountry: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    birthDate: string;
-    tshirtSize: 'S' | 'M' | 'L' | 'XL' | '';
-    eps: string;
-    bloodType: 'A+' | 'A−' | 'B+' | 'B−' | 'AB+' | 'AB−' | 'O+' | 'O−' | '';
-    country: string;
-    department: string;
-    city: string;
-    emergencyContactName: string;
-    emergencyContactPhone: string;
-    agreeToTerms: boolean;
+interface RegistrationFormData extends RegistrationRequest {
+    agreeToPrivacy: boolean;
 }
 
 // Placeholder for event data - in a real app, you might fetch event title or details
 interface EventStub {
-    id: string;
+    id: number;
     title: string;
+    termsUrl?: string;
+    includeTshirt: boolean;
+    tshirtPrice: number;
+    priceUnit: string;
 }
-
-const colombiaDepartments = [
-    {
-        name: 'Antioquia',
-        cities: ['Medellín', 'Envigado', 'Bello', 'Itagüí', 'Rionegro']
-    },
-    {
-        name: 'Cundinamarca',
-        cities: ['Bogotá', 'Soacha', 'Chía', 'Zipaquirá', 'Facatativá']
-    },
-    {
-        name: 'Valle del Cauca',
-        cities: ['Cali', 'Palmira', 'Buenaventura', 'Tuluá', 'Buga']
-    },
-    // ... puedes agregar más departamentos y ciudades relevantes
-];
 
 const bloodTypes = ['A+', 'A−', 'B+', 'B−', 'AB+', 'AB−', 'O+', 'O−'];
 const documentTypes = ['CC', 'TI', 'NIT', 'Pasaporte'];
 const tshirtSizes = ['S', 'M', 'L', 'XL'];
+
+
 
 const RaceRegistrationPage: FC = () => {
     const { eventId } = useParams<{ eventId: string }>();
     const navigate = useNavigate();
     const [event, setEvent] = useState<EventStub | null>(null);
     const [formData, setFormData] = useState<RegistrationFormData>({
-        documentType: '',
+        documentType: 'CC',
         documentNumber: '',
         documentCountry: '',
         firstName: '',
@@ -61,8 +36,9 @@ const RaceRegistrationPage: FC = () => {
         email: '',
         phone: '',
         birthDate: '',
+        wantsTshirt: false,
         tshirtSize: '',
-        eps: '',
+        healthService: '',
         bloodType: '',
         country: '',
         department: '',
@@ -70,40 +46,59 @@ const RaceRegistrationPage: FC = () => {
         emergencyContactName: '',
         emergencyContactPhone: '',
         agreeToTerms: false,
+        agreeToPrivacy: false,
+        eventId: 0,
     });
     const [loading, setLoading] = useState(false); // For API call simulation
     const [eventLoading, setEventLoading] = useState(true);
     const [countries, setCountries] = useState<string[]>([]);
     const [isMinor, setIsMinor] = useState(false);
-
+    const [departments, setDepartments] = useState<string[]>([]);
+    const [cities, setCities] = useState<string[]>([]);
     useEffect(() => {
+        if (!eventId) {
+            navigate('/events');
+            return;
+        }
+        const eventIdInt = parseInt(eventId);
         // Simulate fetching basic event info (like title) to display on the registration page
-        if (eventId) {
+        if (eventIdInt && !isNaN(eventIdInt)) {
             setEventLoading(true);
             // Replace with actual API call if needed
-            setTimeout(() => {
-                setEvent({ id: eventId, title: `Inscripción para Evento ${eventId}` });
+            GetRaces({
+                id: eventIdInt
+            }).then(r => {
+                setEvent({
+                    id: eventIdInt,
+                    title: r?.data[0]?.title,
+                    termsUrl: r?.data[0]?.termsUrl,
+                    includeTshirt: r?.data[0]?.includeTshirt,
+                    tshirtPrice: r?.data[0]?.tshirtPrice,
+                    priceUnit: r?.data[0]?.priceUnit
+                });
                 setEventLoading(false);
-            }, 500);
-        } else {
-            // Handle case where eventId is not present, maybe redirect or show error
-            navigate('/events'); 
+            }).catch(() => {
+                setEventLoading(false);
+                navigate('/events');
+            });
         }
     }, [eventId, navigate]);
 
     useEffect(() => {
-        // Fetch countries from a public API
-        fetch('https://restcountries.com/v3.1/all')
+        setCountries(['Colombia']);
+        return;
+        // DO NOT REMOVE NEXT COMMENTED LINES
+        /* fetch('https://countriesnow.space/api/v0.1/countries/states')
             .then(res => res.json())
             .then(data => {
-                if (Array.isArray(data)) {
-                    const countryNames = data.map((c: any) => c.name.common).sort();
+                if (Array.isArray(data?.data)) {
+                    const countryNames = data.data.map((c: any) => c.name).sort();
                     setCountries(countryNames);
                 } else {
                     setCountries([]);
                 }
             })
-            .catch(() => setCountries([]));
+            .catch(() => setCountries([])); */
     }, []);
 
     useEffect(() => {
@@ -132,27 +127,82 @@ const RaceRegistrationPage: FC = () => {
         }
     };
 
+    const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setFormData(prev => ({ ...prev, country: e.target.value, department: '', city: '' }));
+        fetch('https://countriesnow.space/api/v0.1/countries/states', {
+            method: 'POST',
+            body: JSON.stringify({ country: e.target.value }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data?.data?.states)) {
+                    const departments = data.data.states.map((c: any) => c.name);
+                    setDepartments(departments);
+                } else {
+                    setDepartments([]);
+                }
+            })
+            .catch(() => {
+                alert('Error al obtener los departamentos');
+                setDepartments([]);
+            });
+    };
+
     const handleDepartmentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setFormData(prev => ({ ...prev, department: e.target.value, city: '' }));
+        setFormData(prev => ({ ...prev, department: e.target.value.replace(' Department', ''), city: '' }));
+        fetch('https://countriesnow.space/api/v0.1/countries/state/cities', {
+            method: 'POST',
+            body: JSON.stringify({ country: formData.country, state: e.target.value }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data?.data)) {
+                    setCities(data.data);
+                } else {
+                    setCities([]);
+                }
+            })
+            .catch(() => {
+                alert('Error al obtener las ciudades');
+                setCities([]);
+            });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.agreeToTerms) {
+        if (!event?.id) {
+            alert('Error al obtener el evento');
+            return;
+        }
+        if (event?.termsUrl && !formData.agreeToTerms) {
             alert('Debes aceptar los términos y condiciones para registrarte.');
             return;
         }
+        if (!formData.agreeToPrivacy) {
+            alert('Debes aceptar la política de privacidad para registrarte.');
+            return;
+        }
         setLoading(true);
-        console.log('Form data submitted:', { eventId, ...formData });
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setLoading(false);
-        alert(`¡Inscripción exitosa para el evento ${event?.title}! Recibirás un correo de confirmación.`);
-        navigate(`/events/${eventId}`); // Navigate back to event detail page or a success page
+        try {
+            await CreateRaceRegistration({
+                ...formData,
+                eventId: event?.id
+            });
+            alert(`¡Inscripción exitosa para el evento ${event?.title}! Recibirás un correo de confirmación.`);
+            navigate(`/events/${eventId}`); // Navigate back to event detail page or a success page
+        } catch (error) {
+            console.error(error);
+            alert('Error al inscribirse. Por favor, intenta nuevamente.');
+        } finally {
+            setLoading(false);
+        }
     };
-
-    const departmentOptions = colombiaDepartments.map(dep => dep.name);
-    const cityOptions = colombiaDepartments.find(dep => dep.name === formData.department)?.cities || [];
 
     if (eventLoading) {
         return (
@@ -271,27 +321,50 @@ const RaceRegistrationPage: FC = () => {
                                 <p className="text-xs text-yellow-600 mt-1">Si eres menor de edad, debes ir acompañado de un adulto responsable el día del evento.</p>
                             )}
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Talla de camiseta</label>
-                            <select
-                                name="tshirtSize"
-                                value={formData.tshirtSize}
-                                onChange={handleChange}
-                                className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                                required
-                            >
-                                <option value="" disabled>Selecciona una talla</option>
-                                {tshirtSizes.map(size => (
-                                    <option key={size} value={size}>{size}</option>
-                                ))}
-                            </select>
-                        </div>
+                        {event?.includeTshirt && (
+                            <div className="md:col-span-2">
+                                <div className="flex items-start">
+                                    <div className="flex items-center h-5">
+                                        <input
+                                            id="wantsTshirt"
+                                            name="wantsTshirt"
+                                            type="checkbox"
+                                            checked={formData.wantsTshirt}
+                                            onChange={handleChange}
+                                            className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                                        />
+                                    </div>
+                                    <div className="ml-3 text-sm">
+                                        <label htmlFor="wantsTshirt" className="font-medium text-gray-700">
+                                            Deseo recibir la camiseta del evento ({event?.tshirtPrice ? event?.tshirtPrice + ' ' + event?.priceUnit : 'Es gratis'}).
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {formData.wantsTshirt && (
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Talla de camiseta</label>
+                                <select
+                                    name="tshirtSize"
+                                    value={formData.tshirtSize}
+                                    onChange={handleChange}
+                                    className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                    required={formData.wantsTshirt}
+                                >
+                                    <option value="" disabled>Selecciona una talla</option>
+                                    {tshirtSizes.map(size => (
+                                        <option key={size} value={size}>{size}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">¿Qué EPS tiene?</label>
                             <input
                                 type="text"
-                                name="eps"
-                                value={formData.eps}
+                                name="healthService"
+                                value={formData.healthService}
                                 onChange={handleChange}
                                 className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 required
@@ -317,7 +390,7 @@ const RaceRegistrationPage: FC = () => {
                             <select
                                 name="country"
                                 value={formData.country}
-                                onChange={handleChange}
+                                onChange={handleCountryChange}
                                 className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                                 required
                             >
@@ -337,9 +410,9 @@ const RaceRegistrationPage: FC = () => {
                                 required
                             >
                                 <option value="" disabled>Selecciona departamento</option>
-                                {departmentOptions.map(dep => (
-                                    <option key={dep} value={dep}>{dep}</option>
-                                ))}
+                                {departments.map(dep => {
+                                    return <option key={dep} value={dep}>{(dep as string).replace(' Department', '')}</option>
+                                })}
                             </select>
                         </div>
                         <div>
@@ -352,7 +425,7 @@ const RaceRegistrationPage: FC = () => {
                                 required
                             >
                                 <option value="" disabled>Selecciona ciudad</option>
-                                {cityOptions.map(city => (
+                                {cities.map(city => (
                                     <option key={city} value={city}>{city}</option>
                                 ))}
                             </select>
@@ -380,20 +453,39 @@ const RaceRegistrationPage: FC = () => {
                             />
                         </div>
                     </div>
+                    {event?.termsUrl && (
+                        <div className="flex items-start">
+                            <div className="flex items-center h-5">
+                                <input
+                                    id="agreeToTerms"
+                                    name="agreeToTerms"
+                                    type="checkbox"
+                                    checked={formData.agreeToTerms}
+                                    onChange={handleChange}
+                                    className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                                />
+                            </div>
+                            <div className="ml-3 text-sm">
+                                <label htmlFor="agreeToTerms" className="font-medium text-gray-700">
+                                    Acepto los <a href={event.termsUrl} target="_blank" className="text-blue-600 hover:underline" rel="noreferrer">términos y condiciones</a> de la carrera.
+                                </label>
+                            </div>
+                        </div>
+                    )}
                     <div className="flex items-start">
                         <div className="flex items-center h-5">
                             <input
-                                id="agreeToTerms"
-                                name="agreeToTerms"
+                                id="agreeToPrivacy"
+                                name="agreeToPrivacy"
                                 type="checkbox"
-                                checked={formData.agreeToTerms}
+                                checked={formData.agreeToPrivacy}
                                 onChange={handleChange}
                                 className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
                             />
                         </div>
                         <div className="ml-3 text-sm">
-                            <label htmlFor="agreeToTerms" className="font-medium text-gray-700">
-                                Acepto los <a href="/terms" target="_blank" className="text-blue-600 hover:underline">términos y condiciones</a> de la carrera.
+                            <label htmlFor="agreeToPrivacy" className="font-medium text-gray-700">
+                                Acepto los <a href="/privacy" target="_blank" className="text-blue-600 hover:underline">política de privacidad</a> de la Runity.
                             </label>
                         </div>
                     </div>
