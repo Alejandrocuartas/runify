@@ -32,18 +32,18 @@ const ProfileMenu: React.FC = () => {
     return (
         <div className="relative">
             <div className="flex items-center gap-4">
-                <Link
+                {logged && <Link
                     to="/organizer-dashboard"
                     className="text-sm text-gray-600 hover:text-blue-600 hidden md:inline-block"
                 >
-          Organizador
-                </Link>
-                <Link
+                    Organizador
+                </Link>}
+                {logged && <Link
                     to="/runner-dashboard"
                     className="text-sm text-gray-600 hover:text-blue-600 hidden md:inline-block"
                 >
-          Runner
-                </Link>
+                    Runner
+                </Link>}
 
                 {logged ? (
                     <div className="relative">
@@ -57,7 +57,7 @@ const ProfileMenu: React.FC = () => {
                             <img
                                 src="https://images.icon-icons.com/3446/PNG/512/account_profile_user_avatar_icon_219236.png"
                                 alt={'Perfil de usuario'}
-                                className="w-8 h-8 rounded-full" 
+                                className="w-8 h-8 rounded-full"
                             />
                         </button>
 
@@ -113,7 +113,7 @@ const ProfileMenu: React.FC = () => {
                                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                     role="menuitem"
                                 >
-                  Cerrar sesión
+                                    Cerrar sesión
                                 </button>
                             </div>
                         )}
@@ -124,13 +124,13 @@ const ProfileMenu: React.FC = () => {
                             to="/login"
                             className="text-sm text-gray-600 hover:text-blue-600 hidden md:inline-block"
                         >
-              Iniciar sesión
+                            Iniciar sesión
                         </Link>
                         <Link
                             to="/register"
                             className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-700"
                         >
-              Registrarse
+                            Registrarse
                         </Link>
                     </div>
                 )}

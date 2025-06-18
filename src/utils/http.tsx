@@ -264,6 +264,7 @@ export interface EventModel {
     tshirtPrice: number;
     // calculated fields
     organizer?: string;
+    participants?: number;
 }
 
 export interface PaginatedResponse<T> {
@@ -332,6 +333,53 @@ const CreateRaceRegistration = async (data: RegistrationRequest): Promise<any> =
     return response.json();
 }
 
+export interface UserModel {
+    id: number;
+    createdAt: string;
+    updatedAt: string;
+    deletedAt: string | null;
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+}
+
+const GetUser = async (token: string): Promise<UserModel> => {
+    const headers = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+    };
+
+    const response = await fetch(servicesUrl + "/api/v1/users", {
+        method: "GET",
+        headers,
+    });
+
+    if (!response.ok) {
+        const errorDetails: ErrorDetails = await response.json();
+        thowError(errorDetails, response.statusText, response.status);
+    }
+
+    return response.json();
+}
+
+const DeleteEvent = async (eventId: number, token: string): Promise<any> => {
+    const headers = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+    };
+
+    const response = await fetch(servicesUrl + `/api/v1/events/${eventId}`, {
+        method: "DELETE",
+        headers,
+    });
+
+    if (response.status < 200 || response.status >= 300) {
+        const errorDetails: ErrorDetails = await response.json();
+        thowError(errorDetails, response.statusText, response.status);
+    }
+}
+
 export {
     SignUp,
     SignIn,
@@ -341,4 +389,6 @@ export {
     SearchLocationsSmart,
     GetRaces,
     CreateRaceRegistration,
+    GetUser,
+    DeleteEvent,
 };

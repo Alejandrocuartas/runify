@@ -1,5 +1,6 @@
-import React, { useState, createContext, useContext, useCallback } from "react";
+import React, { useState, createContext, useContext, useCallback, useEffect } from "react";
 import { runnifyTokenName } from "../utils/constants";
+import { GetUser, UserModel } from "../utils/http";
 interface LocationState {
     name: string,
     coordinates: {
@@ -9,8 +10,8 @@ interface LocationState {
 }
 
 interface GlobalContextType {
-    user: any | null
-    setUser: React.Dispatch<React.SetStateAction<any>>;
+    user: UserModel | null
+    setUser: React.Dispatch<React.SetStateAction<UserModel | null>>;
     logged: boolean
     setLogged: React.Dispatch<React.SetStateAction<boolean>>;
     location: LocationState | null
@@ -21,22 +22,33 @@ interface GlobalContextType {
 }
 
 const logContext = createContext<GlobalContextType>({
-    setUser: () => {},
+    setUser: () => { },
     user: null,
     logged: false,
-    setLogged: () => {},
+    setLogged: () => { },
     location: null,
-    setLocation: () => {},
-    requestLocation: () => {},
+    setLocation: () => { },
+    requestLocation: () => { },
     token: null,
-    setToken: () => {}
+    setToken: () => { }
 });
 
 const Context = ({ children }) => {
     const [logged, setLogged] = useState(localStorage.getItem(runnifyTokenName) !== null)
-    const [user, setUser] = useState(null)
+    const [user, setUser] = useState<UserModel | null>(null)
     const [location, setLocation] = useState<LocationState | null>(null)
     const [token, setToken] = useState<string | null>(localStorage.getItem(runnifyTokenName))
+
+    useEffect(() => {
+        if (logged) {
+            const fetchUser = async () => {
+                const user = await GetUser(token as string);
+                setUser(user);
+            }
+            fetchUser();
+        }
+    }, [logged, token, setUser]);
+
     const requestLocation = useCallback(() => {
         if (location) {
             return;

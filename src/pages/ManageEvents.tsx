@@ -2,36 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useGlobalState } from '../context';
 import TagInput from '../components/TagInput';
+import { DeleteEvent, EventModel, GetRaces } from '../utils/http';
 
-interface Event {
-    id: number;
-    title: string;
-    description: string;
-    date: string;
-    startTime: string;
-    subType: string;
-    customSubType?: string;
-    distancePrices: { distance: string; price: number }[];
-    maxParticipants: number;
-    distanceUnit: string;
-    city: string;
-    amenities: string[];
-    participants: number;
-    status: string;
-    organizerId: string;
-    image?: { fileName: string; contentType: string; s3Key: string; fileUrl: string };
-    secondaryImages?: { fileName: string; contentType: string; s3Key: string; fileUrl: string }[];
-}
-
-interface Organizer {
-    id: string;
-    name: string;
-    email: string;
-}
-
-const EditEventModal = ({ event, onClose, onSave }: { event: Event; onClose: () => void; onSave: (updatedEvent: Event) => void }) => {
+const EditEventModal = ({ event, onClose, onSave }: { event: EventModel; onClose: () => void; onSave: (updatedEvent: EventModel) => void }) => {
     const [loading, setLoading] = useState(false);
-    const [eventData, setEventData] = useState<Event>(event);
+    const [eventData, setEventData] = useState<EventModel>(event);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value, type } = e.target;
@@ -45,27 +20,6 @@ const EditEventModal = ({ event, onClose, onSave }: { event: Event; onClose: () 
         }));
     };
 
-    const handleDistancePriceChange = (distances: string[]) => {
-        const currentPrices = eventData.distancePrices;
-        const newDistancePrices = distances.map(distance => {
-            const existing = currentPrices.find(dp => dp.distance === distance);
-            return existing || { distance, price: 0 };
-        });
-        setEventData(prev => ({
-            ...prev,
-            distancePrices: newDistancePrices
-        }));
-    };
-
-    const handlePriceChange = (distance: string, price: string) => {
-        const formattedPrice = price.replace(/\D/g, '');
-        setEventData(prev => ({
-            ...prev,
-            distancePrices: prev.distancePrices.map(dp =>
-                dp.distance === distance ? { ...dp, price: Number(formattedPrice) } : dp
-            )
-        }));
-    };
 
     const handleAmenitiesChange = (amenities: string[]) => {
         setEventData(prev => ({
@@ -154,7 +108,7 @@ const EditEventModal = ({ event, onClose, onSave }: { event: Event; onClose: () 
                                     <input
                                         type="time"
                                         name="startTime"
-                                        value={eventData.startTime}
+                                        value={eventData.date.split('T')[1]}
                                         onChange={handleChange}
                                         className="w-full p-2 border rounded"
                                         required
@@ -164,35 +118,32 @@ const EditEventModal = ({ event, onClose, onSave }: { event: Event; onClose: () 
                                 <div className="col-span-2">
                                     <label className="block mb-2">Distancias</label>
                                     <TagInput
-                                        tags={eventData.distancePrices.map(dp => dp.distance)}
-                                        onTagsChange={handleDistancePriceChange}
+                                        tags={[]}
+                                        onTagsChange={() => { }}
                                         placeholder="Agregar distancia (ej: 5k, 10k, 21k)"
                                         className="w-full"
                                     />
                                 </div>
 
-                                {eventData.distancePrices.length > 0 && (
-                                    <div className="col-span-2">
-                                        <label className="block mb-2">Precios por Distancia</label>
-                                        <div className="space-y-2">
-                                            {eventData.distancePrices.map((dp) => (
-                                                <div key={dp.distance} className="flex items-center gap-4">
-                                                    <span className="w-24">{dp.distance}</span>
-                                                    <input
-                                                        type="text"
-                                                        inputMode="numeric"
-                                                        value={dp.price.toLocaleString()}
-                                                        onChange={(e) => handlePriceChange(dp.distance, e.target.value)}
-                                                        className="flex-1 p-2 border rounded"
-                                                        placeholder="Ingrese el precio"
-                                                        required
-                                                    />
-                                                    <span className="text-gray-500">COP</span>
-                                                </div>
-                                            ))}
+                                <div className="col-span-2">
+                                    <label className="block mb-2">Precios por Distancia</label>
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-4">
+                                            <span className="w-24">{eventData.distance}</span>
+                                            <input
+                                                type="text"
+                                                inputMode="numeric"
+                                                value={eventData.price.toLocaleString()}
+                                                onChange={(e) => handleChange(e)}
+                                                name="price"
+                                                className="flex-1 p-2 border rounded"
+                                                placeholder="Ingrese el precio"
+                                                required
+                                            />
+                                            <span className="text-gray-500">COP</span>
                                         </div>
                                     </div>
-                                )}
+                                </div>
 
                                 <div>
                                     <label className="block mb-2">Unidad de Distancia</label>
@@ -213,7 +164,7 @@ const EditEventModal = ({ event, onClose, onSave }: { event: Event; onClose: () 
                                     <label className="block mb-2">Tipo</label>
                                     <select
                                         name="subType"
-                                        value={eventData.subType}
+                                        value={eventData.type}
                                         onChange={handleChange}
                                         className="w-full p-2 border rounded"
                                         required
@@ -232,12 +183,12 @@ const EditEventModal = ({ event, onClose, onSave }: { event: Event; onClose: () 
                                         <option value="Race with a theme">Carrera con tema</option>
                                         <option value="others">Otros</option>
                                     </select>
-                                    {eventData.subType === 'others' && (
+                                    {eventData.type === 'others' && (
                                         <div className="mt-2">
                                             <input
                                                 type="text"
                                                 name="customSubType"
-                                                value={eventData.customSubType}
+                                                value={eventData.type}
                                                 onChange={handleChange}
                                                 className="w-full p-2 border rounded"
                                                 placeholder="Especifique el tipo de carrera"
@@ -247,23 +198,10 @@ const EditEventModal = ({ event, onClose, onSave }: { event: Event; onClose: () 
                                     )}
                                 </div>
 
-                                <div>
-                                    <label className="block mb-2">Máximo de Participantes</label>
-                                    <input
-                                        type="number"
-                                        name="maxParticipants"
-                                        value={eventData.maxParticipants}
-                                        onChange={handleChange}
-                                        className="w-full p-2 border rounded"
-                                        min="1"
-                                        required
-                                    />
-                                </div>
-
                                 <div className="col-span-2">
                                     <label className="block mb-2">Beneficios</label>
                                     <TagInput
-                                        tags={eventData.amenities}
+                                        tags={eventData.amenities || []}
                                         onTagsChange={handleAmenitiesChange}
                                         placeholder="Agregar beneficio (ej: Medalla, Hidratación, Camiseta)"
                                         className="w-full"
@@ -284,7 +222,7 @@ const EditEventModal = ({ event, onClose, onSave }: { event: Event; onClose: () 
                                 type="submit"
                                 disabled={loading}
                                 className={`px-4 py-2 rounded text-white ${loading ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'
-                                }`}
+                                    }`}
                             >
                                 {loading ? 'Guardando...' : 'Guardar Cambios'}
                             </button>
@@ -298,12 +236,11 @@ const EditEventModal = ({ event, onClose, onSave }: { event: Event; onClose: () 
 
 const ManageEvents = () => {
     const [loading, setLoading] = useState(true);
-    const [events, setEvents] = useState<Event[]>([]);
-    const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+    const [events, setEvents] = useState<EventModel[]>([]);
+    const [selectedEvent, setSelectedEvent] = useState<EventModel | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [currentOrganizer, setCurrentOrganizer] = useState<Organizer | null>(null);
     const navigate = useNavigate();
-    const { token, logged } = useGlobalState();
+    const { token, logged, user } = useGlobalState();
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -313,16 +250,9 @@ const ManageEvents = () => {
                     return;
                 }
 
-                // Simulamos obtener los datos del organizador
-                const organizerData: Organizer = {
-                    id: 'org_123',
-                    name: 'Organizador Ejemplo',
-                    email: 'organizador@ejemplo.com'
-                };
-                setCurrentOrganizer(organizerData);
-
-                // Ahora podemos cargar los eventos específicos del organizador
-                await fetchEvents(organizerData.id);
+                if (user) {
+                    await fetchEvents(user.id);
+                }
             } catch (error) {
                 console.error('Error de autenticación:', error);
                 navigate('/login');
@@ -330,95 +260,34 @@ const ManageEvents = () => {
         };
 
         checkAuth();
-    }, [navigate, logged, token]);
+    }, [navigate, logged, token, user]);
 
-    const fetchEvents = async (organizerId: string) => {
+    const fetchEvents = async (organizerId: number) => {
         setLoading(true);
         try {
-            // Aquí iría la llamada real a la API
-            // Por ejemplo: const response = await api.get(`/events?organizerId=${organizerId}`);
 
-            // Simulamos la respuesta de la API
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            GetRaces({
+                user: organizerId,
+                limit: 1000,
+            }).then(res => {
+                setEvents(res.data);
+            }).catch(err => {
+                console.error('Error al cargar eventos:', err);
+            });
 
-            const sampleEvents: Event[] = [
-                {
-                    id: 1,
-                    title: "Maratón de la Ciudad 2024",
-                    description: "Carrera urbana por las principales calles de la ciudad",
-                    date: "2024-03-15",
-                    startTime: "07:00",
-                    subType: "Long distance race",
-                    distancePrices: [
-                        { distance: "21k", price: 50000 },
-                        { distance: "42k", price: 75000 }
-                    ],
-                    maxParticipants: 1000,
-                    distanceUnit: "kilometers",
-                    city: "Bogotá",
-                    amenities: ["Medalla", "Hidratación", "Camiseta"],
-                    participants: 85,
-                    status: "active",
-                    organizerId: organizerId
-                },
-                {
-                    id: 2,
-                    title: "Carrera Nocturna Trail",
-                    description: "Carrera nocturna por senderos naturales",
-                    date: "2024-04-05",
-                    startTime: "20:00",
-                    subType: "Trail race",
-                    distancePrices: [
-                        { distance: "10k", price: 35000 },
-                        { distance: "15k", price: 45000 }
-                    ],
-                    maxParticipants: 500,
-                    distanceUnit: "kilometers",
-                    city: "Medellín",
-                    amenities: ["Medalla", "Hidratación", "Frontal"],
-                    participants: 45,
-                    status: "active",
-                    organizerId: organizerId
-                },
-                {
-                    id: 3,
-                    title: "Desafío Carrera en la Playa",
-                    description: "Carrera recreativa en la playa",
-                    date: "2024-05-20",
-                    startTime: "08:00",
-                    subType: "Tematic or recreational race",
-                    distancePrices: [
-                        { distance: "5k", price: 25000 },
-                        { distance: "10k", price: 35000 }
-                    ],
-                    maxParticipants: 300,
-                    distanceUnit: "kilometers",
-                    city: "Cartagena",
-                    amenities: ["Medalla", "Hidratación", "Tostada"],
-                    participants: 26,
-                    status: "upcoming",
-                    organizerId: organizerId
-                }
-            ];
-            setEvents(sampleEvents);
         } catch (error) {
             console.error('Error al cargar eventos:', error);
-            // Aquí podríamos mostrar un mensaje de error al usuario
         } finally {
             setLoading(false);
         }
     };
 
-    const handleEdit = (event: Event) => {
-        if (event.organizerId !== currentOrganizer?.id) {
-            alert('No tienes permiso para editar este evento');
-            return;
-        }
+    const handleEdit = (event: EventModel) => {
         setSelectedEvent(event);
         setIsEditModalOpen(true);
     };
 
-    const handleSaveEvent = (updatedEvent: Event) => {
+    const handleSaveEvent = (updatedEvent: EventModel) => {
         setEvents(events.map(event =>
             event.id === updatedEvent.id ? updatedEvent : event
         ));
@@ -427,44 +296,14 @@ const ManageEvents = () => {
     };
 
     const handleDelete = async (eventId: number) => {
-        // Verificamos que el evento pertenezca al organizador actual
-        const eventToDelete = events.find(event => event.id === eventId);
-        if (eventToDelete?.organizerId !== currentOrganizer?.id) {
-            alert('No tienes permiso para eliminar este evento');
-            return;
-        }
-
         if (window.confirm('¿Estás seguro de que deseas eliminar este evento?')) {
             try {
-                // Aquí iría la llamada real a la API para eliminar el evento
-                // await api.delete(`/events/${eventId}`);
-
+                await DeleteEvent(eventId, token as string);
                 setEvents(events.filter(event => event.id !== eventId));
             } catch (error) {
                 console.error('Error al eliminar evento:', error);
                 alert('Error al eliminar el evento');
             }
-        }
-    };
-
-    const handleStatusChange = async (eventId: number, newStatus: string) => {
-        // Verificamos que el evento pertenezca al organizador actual
-        const eventToUpdate = events.find(event => event.id === eventId);
-        if (eventToUpdate?.organizerId !== currentOrganizer?.id) {
-            alert('No tienes permiso para modificar este evento');
-            return;
-        }
-
-        try {
-            // Aquí iría la llamada real a la API para actualizar el estado
-            // await api.patch(`/events/${eventId}`, { status: newStatus });
-
-            setEvents(events.map(event =>
-                event.id === eventId ? { ...event, status: newStatus } : event
-            ));
-        } catch (error) {
-            console.error('Error al actualizar estado:', error);
-            alert('Error al actualizar el estado del evento');
         }
     };
 
@@ -507,7 +346,6 @@ const ManageEvents = () => {
                                     <th className="text-left py-3 px-4">Evento</th>
                                     <th className="text-left py-3 px-4">Fecha</th>
                                     <th className="text-left py-3 px-4">Participantes</th>
-                                    <th className="text-left py-3 px-4">Estado</th>
                                     <th className="text-left py-3 px-4">Acciones</th>
                                 </tr>
                             </thead>
@@ -521,22 +359,7 @@ const ManageEvents = () => {
                                             {new Date(event.date).toLocaleDateString()}
                                         </td>
                                         <td className="py-4 px-4">
-                                            {event.participants}
-                                        </td>
-                                        <td className="py-4 px-4">
-                                            <select
-                                                value={event.status}
-                                                onChange={(e) => handleStatusChange(event.id, e.target.value)}
-                                                className={`px-3 py-1 rounded-full text-sm ${event.status === 'active'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : 'bg-blue-100 text-blue-800'
-                                                }`}
-                                            >
-                                                <option value="active">Activo</option>
-                                                <option value="upcoming">Próximo</option>
-                                                <option value="completed">Completado</option>
-                                                <option value="cancelled">Cancelado</option>
-                                            </select>
+                                            {event.participants || 0}
                                         </td>
                                         <td className="py-4 px-4">
                                             <div className="flex gap-2">
@@ -547,7 +370,7 @@ const ManageEvents = () => {
                                                     Editar
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDelete(event.id)}
+                                                    onClick={() => handleDelete(event.id as number)}
                                                     className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
                                                 >
                                                     Eliminar
@@ -562,17 +385,19 @@ const ManageEvents = () => {
                 )}
             </div>
 
-            {isEditModalOpen && selectedEvent && (
-                <EditEventModal
-                    event={selectedEvent}
-                    onClose={() => {
-                        setIsEditModalOpen(false);
-                        setSelectedEvent(null);
-                    }}
-                    onSave={handleSaveEvent}
-                />
-            )}
-        </div>
+            {
+                isEditModalOpen && selectedEvent && (
+                    <EditEventModal
+                        event={selectedEvent}
+                        onClose={() => {
+                            setIsEditModalOpen(false);
+                            setSelectedEvent(null);
+                        }}
+                        onSave={handleSaveEvent}
+                    />
+                )
+            }
+        </div >
     );
 };
 
