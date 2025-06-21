@@ -13,6 +13,8 @@ import EventDetailPage from "./pages/EventDetailPage";
 import RaceRegistrationPage from "./pages/RaceRegistrationPage";
 import ManageEvents from "./pages/ManageEvents";
 import EventStatistics from "./pages/EventStatistics";
+import TermsAndConditions from "./pages/TermsAndConditions";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 const App = () => {
     return (
@@ -31,6 +33,8 @@ const App = () => {
                     <Route path="/add-race" element={<AddRace/>} />
                     <Route path="/manage-events" element={<ManageEvents/>} />
                     <Route path="/event-statistics" element={<EventStatistics/>} />
+                    <Route path="/terms" element={<TermsAndConditions/>} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicy/>} />
                 </Routes>
             </Layout>
         </BrowserRouter>

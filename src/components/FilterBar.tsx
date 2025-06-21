@@ -1,4 +1,6 @@
 import React, { FC, useState } from 'react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import { Location } from '../utils/types';
 import { SearchLocationsSmart } from '../utils/http';
 
@@ -11,6 +13,7 @@ const FilterBar: FC<FilterBarProps> = ({ onFilterChange, onClearFilters }) => {
     const [showDropdown, setShowDropdown] = useState(false);
     const [cities, setCities] = useState<Location[]>([]);
     const [city, setCity] = useState('');
+    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
     const handleSelectCity = (city: Location) => {
         onFilterChange('city', city.name, city.coordinates);
@@ -19,14 +22,27 @@ const FilterBar: FC<FilterBarProps> = ({ onFilterChange, onClearFilters }) => {
         setCities([]);
     };
 
+    const handleDateChange = (date: Date | null) => {
+        setSelectedDate(date);
+        if (date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const dateValue = `${year}-${month}`;
+            onFilterChange('date', dateValue);
+        } else {
+            onFilterChange('date', '');
+        }
+    };
+
     const localOnClearFilters = () => {
         onClearFilters();
         setCity('');
         setCities([]);
+        setSelectedDate(null);
         const typeFilter = document.getElementById('type_filter') as HTMLSelectElement;
-        const dateFilter = document.getElementById('date_filter') as HTMLInputElement;
-        typeFilter.value = '';
-        dateFilter.value = '';
+        if (typeFilter) {
+            typeFilter.value = '';
+        }
     };
 
     const handleChangeLocation = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,23 +84,16 @@ const FilterBar: FC<FilterBarProps> = ({ onFilterChange, onClearFilters }) => {
                         <option value="other">Otro</option>
                     </select>
 
-                    {/* <select
-                        onChange={(e) => onFilterChange('distance', e.target.value)}
-                        className="px-2 py-1.5 border border-gray-200 rounded-lg bg-white text-sm text-gray-800 cursor-pointer transition-all hover:border-blue-600 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 md:w-auto w-full"
-                    >
-                        <option value="">Distancia</option>
-                        <option value="5km">5K</option>
-                        <option value="10km">10K</option>
-                        <option value="21km">Media Maratón</option>
-                        <option value="42km">Maratón Completa</option>
-                    </select> */}
-
-                    <input
-                        type="month"
-                        id='date_filter'
-                        onChange={(e) => onFilterChange('date', e.target.value)}
-                        className="px-2 py-1.5 border border-gray-200 rounded-lg bg-white text-sm text-gray-800 cursor-pointer transition-all hover:border-blue-600 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 md:w-[130px] w-full [&::-webkit-calendar-picker-indicator]:scale-75 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                    />
+                    <div className="relative md:w-[130px] w-full">
+                        <DatePicker
+                            selected={selectedDate}
+                            onChange={handleDateChange}
+                            showMonthYearPicker
+                            dateFormat="MMM yyyy"
+                            placeholderText="Seleccionar Mes"
+                            className="px-2 py-1.5 border border-gray-200 rounded-lg bg-white text-sm text-gray-800 cursor-pointer transition-all hover:border-blue-600 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 w-full"
+                        />
+                    </div>
 
                     {/* Contenedor relativo para el input y el dropdown */}
                     <div className="relative md:w-[130px] w-full">

@@ -108,11 +108,11 @@ export interface CreateRaceRequest {
     distance: number;
     distanceUnit: string;
     type: string;
-    date: string; // 06-10-2025T10:00:00Z
-    files?: string[];
+    date: string;
     coordinates: [number, number];
     city: string;
     amenities?: string[];
+    files?: string[];
     includeTshirt: boolean;
     tshirtPrice: number;
     termsUrl?: string;

@@ -181,11 +181,11 @@ const RaceRegistrationPage: FC = () => {
             return;
         }
         if (event?.termsUrl && !formData.agreeToTerms) {
-            alert('Debes aceptar los términos y condiciones para registrarte.');
+            alert('Debes aceptar los términos y condiciones del organizador para registrarte.');
             return;
         }
         if (!formData.agreeToPrivacy) {
-            alert('Debes aceptar la política de privacidad para registrarte.');
+            alert('Debes aceptar los términos y condiciones y la política de privacidad de Runity para registrarte.');
             return;
         }
         setLoading(true);
@@ -467,7 +467,7 @@ const RaceRegistrationPage: FC = () => {
                             </div>
                             <div className="ml-3 text-sm">
                                 <label htmlFor="agreeToTerms" className="font-medium text-gray-700">
-                                    Acepto los <a href={event.termsUrl} target="_blank" className="text-blue-600 hover:underline" rel="noreferrer">términos y condiciones</a> de la carrera.
+                                    Acepto los <a href={event.termsUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">términos y condiciones del organizador</a>.
                                 </label>
                             </div>
                         </div>
@@ -485,7 +485,7 @@ const RaceRegistrationPage: FC = () => {
                         </div>
                         <div className="ml-3 text-sm">
                             <label htmlFor="agreeToPrivacy" className="font-medium text-gray-700">
-                                Acepto los <a href="/privacy" target="_blank" className="text-blue-600 hover:underline">política de privacidad</a> de la Runity.
+                                Acepto los <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Términos y Condiciones y la Política de Privacidad</a> de Runity.
                             </label>
                         </div>
                     </div>
