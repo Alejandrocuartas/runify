@@ -4,6 +4,7 @@ import { runnifyTokenName } from '../utils/constants';
 import { useGlobalState } from '../context';
 import TagInput from '../components/TagInput';
 import { Location } from '../utils/types';
+import { combineDateTime } from '../utils/date';
 
 interface EventFile {
     fileName: string;
@@ -40,10 +41,6 @@ interface EventData {
 }
 
 
-const combineDateTime = (dateStr: string, timeStr: string): string => {
-    const date = new Date(`${dateStr}T${timeStr}:00Z`);
-    return date.toISOString();
-};
 
 const AddRace = () => {
     const [loading, setLoading] = useState(false);
